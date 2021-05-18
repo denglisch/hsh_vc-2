@@ -41,14 +41,16 @@ def visualize(meas, beacons):
     beacon_dists = meas.get_beacon_dists()
     beacon_dists2d = meas.get_beacon_dists2d()
 
+    rssi_conv = vc.RSSIConverter( c0=-29.0, n=2.3, d0=1.2)
+    beacon_rssis = rssi_conv.get_dist(meas.get_beacon_rssis())
 
     print("beacon names: {}".format(beacon_names))
-    for name, dist, dist2d in zip(beacon_names, beacon_dists, beacon_dists2d):
+    for name, dist, dist2d, rssis in zip(beacon_names, beacon_dists, beacon_dists2d, beacon_rssis):
         beacon_location = beacons.loc[name].values
 
         print("beacon: {} x: {} y:{} ".format(name, beacon_location[0], beacon_location[1]))
         # [0:2] nur index 0 bis exkl 2 nehmen
-        ax.add_patch(plt.Circle(beacon_location[0:2], radius=dist2d, alpha=0.3, color='g', fill=False))
+        ax.add_patch(plt.Circle(beacon_location[0:2], radius=rssis, alpha=0.3, color='g', fill=False))
         ax.add_patch(plt.Circle(beacon_location[0:2], radius=dist, alpha=0.3, color='orange', fill=False))
         ax.add_patch(plt.Circle(beacon_location[0:2], radius=r_dot, fc='b'))
         plt.annotate("{} dist: {:.2f}".format(name ,dist), beacon_location[0:2] + offset)
