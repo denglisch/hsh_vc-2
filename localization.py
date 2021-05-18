@@ -34,7 +34,7 @@ def visualize(meas, beacons):
 
     fig = plt.figure(figsize=[8,8])
     ax = plt.axes()
-    ax.add_patch(plt.Circle(meas.get_real_location()[0:2], radius=0.10, fc='r'))
+    ax.add_patch(plt.Circle(meas.get_real_location()[0:2], radius=0.10, fc='red'))
     plt.annotate("real", meas.get_real_location()[0:2] + offset)
 
     beacon_names = meas.get_beacon_names()
@@ -48,8 +48,8 @@ def visualize(meas, beacons):
 
         print("beacon: {} x: {} y:{} ".format(name, beacon_location[0], beacon_location[1]))
         # [0:2] nur index 0 bis exkl 2 nehmen
-        ax.add_patch(plt.Circle(beacon_location[0:2], radius=dist2d, color='g', fill=False))
-        ax.add_patch(plt.Circle(beacon_location[0:2], radius=dist, color='r', fill=False))
+        ax.add_patch(plt.Circle(beacon_location[0:2], radius=dist2d, alpha=0.3, color='g', fill=False))
+        ax.add_patch(plt.Circle(beacon_location[0:2], radius=dist, alpha=0.3, color='orange', fill=False))
         ax.add_patch(plt.Circle(beacon_location[0:2], radius=r_dot, fc='b'))
         plt.annotate("{} dist: {:.2f}".format(name ,dist), beacon_location[0:2] + offset)
     plt.axis('scaled')   # alternative: plt.axis([xmin, xmax, ymin, ymax])
