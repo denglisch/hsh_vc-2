@@ -20,29 +20,48 @@ filename = "measurement1.p"
 with open(filename, 'rb') as f:
     measurements = pickle.load(f)
 print(type(measurements))
-print(measurements)
+#print(measurements)
 
 # select one measurement
 meas = measurements[0]
 print(meas)
 
+
 # visualize beacon locations
 def visualize(meas, beacons):
     r_dot = 0.25                  # radius for dots
-    offset = np.array([0.3,0.0])  # offset for annotations
+    offset = np.array([0.6,0.3])  # offset for annotations
 
     fig = plt.figure(figsize=[8,8])
     ax = plt.axes()
+    ax.add_patch(plt.Circle(meas.get_real_location()[0:2], radius=0.10, fc='r'))
+    plt.annotate("real", meas.get_real_location()[0:2] + offset)
+
     beacon_names = meas.get_beacon_names()
-    for name in beacon_names:
+    beacon_dists = meas.get_beacon_dists()
+    beacon_dists2d = meas.get_beacon_dists2d()
+
+
+    print("beacon names: {}".format(beacon_names))
+    for name, dist, dist2d in zip(beacon_names, beacon_dists, beacon_dists2d):
         beacon_location = beacons.loc[name].values
+
+        print("beacon: {} x: {} y:{} ".format(name, beacon_location[0], beacon_location[1]))
+        # [0:2] nur index 0 bis exkl 2 nehmen
+        ax.add_patch(plt.Circle(beacon_location[0:2], radius=dist2d, color='g', fill=False))
+        ax.add_patch(plt.Circle(beacon_location[0:2], radius=dist, color='r', fill=False))
         ax.add_patch(plt.Circle(beacon_location[0:2], radius=r_dot, fc='b'))
-        plt.annotate(name, beacon_location[0:2] + offset)
+        plt.annotate("{} dist: {:.2f}".format(name ,dist), beacon_location[0:2] + offset)
     plt.axis('scaled')   # alternative: plt.axis([xmin, xmax, ymin, ymax])
+    plt.legend(["real", "dist2d", "dist", "beacon"])
     plt.show()
+
+beacon_locations = beacons.loc[meas.get_beacon_names()].values
+print("location")
+print(beacon_locations)
 
 visualize(meas, beacons)
 
 # scatter plot of RSSI vs. distance
-plt.scatter(meas.get_beacon_dists(), meas.get_beacon_rssis())
-plt.show()
+#plt.scatter(meas.get_beacon_dists(), meas.get_beacon_rssis())
+#plt.show()

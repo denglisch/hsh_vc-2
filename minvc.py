@@ -58,6 +58,9 @@ class Measurement:
     def get_beacon_dists(self):
         return self.beacon_data['dist'].values
 
+    def get_real_location(self):
+        return self.actual_location
+
     # get 2D beacon distances as np.array
     def get_beacon_dists2d(self):
         return self.beacon_data['dist2d'].values
