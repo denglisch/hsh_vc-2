@@ -17,6 +17,7 @@ Code | shortcut
  --------| --------
 Comment line out | cmd+shift+7(muss geändert werden) 
 Quick Doc der Funktion | fn+F1
+Show all input parameter | cmd+shift+p
 --------| --------
 navigate | shortcut 
  --------| --------

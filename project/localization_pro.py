@@ -16,16 +16,11 @@ beacons.set_index('name', inplace=True)
 print(beacons)
 
 # read measurements
-# filename = "project/measurement_proj.p"
+# filename = "measurement_proj.p"
 # with open(filename, 'rb') as f:
 #     measurements = pickle.load(f)
 # print(type(measurements))
 # print(measurements)
-
-filename = "measurement1.p"
-with open(filename, 'rb') as f:
-    measurements = pickle.load(f)
-print(type(measurements))
 
 
 # select one measurement
