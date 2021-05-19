@@ -49,9 +49,9 @@ def create_measurement(device_name, device_location, beacons, n_signals=None, no
 beacons = pd.read_csv("beacons.csv")
 # create list of measurements
 device_name = "d1"
-n_signals = 4
-meas0 = create_measurement(device_name, np.array([23.0,26.0,0.0]), beacons, n_signals, noise = 0.5)
-meas1 = create_measurement(device_name, np.array([21.0,17.0,0.0]), beacons, n_signals, noise = 0.5)
+n_signals = 8
+meas0 = create_measurement(device_name, np.array([23.0,26.0,0.0]), beacons, n_signals, noise = 0.3)
+meas1 = create_measurement(device_name, np.array([21.0,17.0,0.0]), beacons, n_signals, noise = 0.3)
 measurements = [meas0,meas1]
 
 
@@ -60,6 +60,6 @@ print("meas1 \n{}".format(meas1))
 
 
 # store measurements as pickle file
-filename = "measurement1.p"
+filename = "measurement1noise3.p"
 with open(filename, 'wb') as f:
     pickle.dump(measurements, f)
