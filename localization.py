@@ -10,7 +10,7 @@ from scipy import optimize, stats
 import minvc as vc
 
 # read beacon locations
-beacons = pd.read_csv("beacons.csv")
+beacons: vc.Beacon = pd.read_csv("beacons.csv")
 beacons.set_index('name', inplace=True)
 # display(beacons)
 print(beacons)
@@ -29,7 +29,7 @@ print(type(measurements))
 
 
 # select one measurement
-meas = measurements[0]
+meas: vc.Measurement = measurements[0]
 print(meas)
 
 
@@ -68,11 +68,14 @@ def visualize(meas, beacons):
 # print("location")
 # print(beacon_locations)
 
-visualize(meas, beacons)
+
+# visualize(meas, beacons)
 res = stats.linregress(meas.get_beacon_dists(), meas.get_beacon_rssis())
 print(res)
+print(meas.get_beacon_rssis())
 
 # scatter plot of RSSI vs. distance
 plt.scatter(meas.get_beacon_dists(), meas.get_beacon_rssis())
 plt.plot(meas.get_beacon_dists(), res.intercept + res.slope*meas.get_beacon_dists(), 'r', label='fitted line')
+plt.legend()
 plt.show()
