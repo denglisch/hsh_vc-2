@@ -109,7 +109,7 @@ def visualize_rssi_dist(calib):
     plt.legend()
     plt.show()
 
-def calc_dist(meas, c0, n):
+def calc_est(meas, c0, n):
     rssi_conv = vc.RSSIConverter(c0=c0, n=n, d0=1.0)
     beacon_est = rssi_conv.get_dist(meas.get_beacon_rssis())
     meas.set_beacon_est(beacon_est)
@@ -123,7 +123,6 @@ def calc_c0_n(calib):
 
 def calc_location(meas):
     # ??? Hier fehtl die berechnung des punktes
-    meas.set_device_est_position(None)
     meas.set_device_est_position([10,45]) # <- zum testen
     return meas
 
@@ -138,7 +137,7 @@ def main():
     meas = load_meas()
 
     #calc
-    meas = calc_dist(meas, c0, n)
+    meas = calc_est(meas, c0, n)
     meas = calc_location(meas)
 
     #vis device
