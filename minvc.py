@@ -32,10 +32,11 @@ class Measurement:
         self.device_name = device_name
         # DataFrame with columns: name, rssi, optional dist
         assert type(beacon_data) is pd.DataFrame
-        self.beacon_data = beacon_data
+        self.beacon_data: pd.DataFrame = beacon_data
         # date and time of measurement
         assert type(timestamp) is pd.Timestamp
         self.timestamp = timestamp
+        self.device_est_position = None
         # optional actual device location (for training)
         if actual_location is not None:
             assert type(actual_location) is np.ndarray
@@ -46,6 +47,11 @@ class Measurement:
         return "device: " + self.device_name + ", timestamp: " + str(self.timestamp) \
                + ", location: " + str(self.actual_location) + "\n" + str(self.beacon_data)
 
+    def get_device_est_position(self):
+        return self.device_est_position
+
+    def set_device_est_position(self, device_est_position):
+        self.device_est_position = device_est_position
     # get beacon names as np.array
     def get_beacon_names(self):
         return self.beacon_data['name'].values
@@ -57,6 +63,12 @@ class Measurement:
     # get beacon distances as np.array
     def get_beacon_dists(self):
         return self.beacon_data['dist'].values
+
+    def get_beacon_est(self):
+        return self.beacon_data['est'].values
+
+    def set_beacon_est(self, list_est):
+        self.beacon_data['est'] = list_est
 
     def get_real_location(self):
         return self.actual_location

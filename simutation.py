@@ -34,7 +34,7 @@ def create_measurement(device_name, device_location, beacons, n_signals=None, no
                                     'dist': beacon_dists, 'dist2d': beacon_dists2d})
     else:
         beacon_data = pd.DataFrame({'name': beacon_names, 'rssi': beacon_rssis, \
-                                    'dist': np.full(n, np.nan), 'dist2d': np.full(n, np.nan)})
+                                    'dist': np.full(n, np.nan), 'dist2d': np.full(n, np.nan), 'est': np.full(n, np.nan)})
     if n_signals is not None:
         beacon_data.sort_values(by='rssi', ascending=False, ignore_index=True, inplace=True)
         beacon_data.drop(beacon_data.index[n_signals:], inplace=True)
