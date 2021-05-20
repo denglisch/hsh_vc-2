@@ -43,7 +43,7 @@ def visualize_device(meas, beacons):
     location_dot = 0.45
     offset = np.array([0.6,0.3])    # offset for annotations
     legend: list = []
-    fig = plt.figure(figsize=[8,8])
+    fig = plt.figure(figsize=[5,5])
     ax = plt.axes()
 
     real_pos = meas.get_real_location()
@@ -95,19 +95,20 @@ def visualize_device(meas, beacons):
 
 # scatter plot of RSSI vs. distance
 def visualize_rssi_dist(calib):
-    rssi = calib['rssi'].values
-    dist = calib['dist'].values
-    res = stats.linregress(dist, rssi)
+    rssis= calib['rssi'].values
+    dists = calib['dist'].values
+    res = stats.linregress(dists, rssis)
     print("intercept: {}, slope: {}".format(res.intercept,res.slope))
-    print("RSSIs {}".format(rssi))
-    plt.scatter(dist, rssi)
-    plt.plot(dist, res.intercept + res.slope*dist, 'r', label='fitted line')
+    print("RSSIs {}".format(rssis))
+    plt.scatter(dists, rssis)
+    plt.plot(dists, res.intercept + res.slope*dists, 'r', label='fitted line')
 
     plt.title("RSSI vs. distance")
     plt.xlabel("Distance")
     plt.ylabel("RSSI")
     plt.legend()
     plt.show()
+    return res
 
 def calc_est(meas, c0, n):
     rssi_conv = vc.RSSIConverter(c0=c0, n=n, d0=1.0)
@@ -115,10 +116,19 @@ def calc_est(meas, c0, n):
     meas.set_beacon_est(beacon_est)
     return meas
 
-def calc_c0_n(calib):
+def calc_c0_n(calib, res):
     # ??? hier muss c0 und n berechnet werden
     c0 = -50
     n = 2
+    rssis = calib['rssi'].values
+    dists = calib['dist'].values
+    print("intercept {}, slope {}".format(res.intercept, res.slope))
+    for dist, rssi in zip(dists, rssis):
+        print("dist {}, rssi {} rssi_est {}".format(dist, rssi, res.intercept + res.slope * dist))
+        print("rssi {} dist {}, dist_est {}".format(rssi, dist, (rssi - res.intercept) / res.slope))
+    # rssi = inter + slopw * dist
+    # r = i+s*d
+
     return c0, n
 
 def calc_location(meas):
@@ -129,8 +139,8 @@ def calc_location(meas):
 def main():
     # vis calib
     calib = load_calibration()
-    visualize_rssi_dist(calib)
-    c0, n = calc_c0_n(calib)
+    res = visualize_rssi_dist(calib)
+    c0, n = calc_c0_n(calib, res)
 
     #load
     beacons = load_beacon()
