@@ -60,9 +60,9 @@ class Measurement:
     def get_beacon_rssis(self):
         return self.beacon_data['rssi'].values
 
-    # get beacon distances as np.array
-    def get_beacon_dists(self):
-        return self.beacon_data['dist'].values
+    # # get beacon distances as np.array
+    # def get_beacon_dists(self):
+    #     return self.beacon_data['dist'].values
 
     def get_beacon_est(self):
         return self.beacon_data['est'].values

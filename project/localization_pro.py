@@ -9,37 +9,32 @@ import matplotlib.pyplot as plt
 from scipy import optimize, stats
 import minvc as vc
 
-
+debug_bool = False
 # read beacon locations
-def load_beacon_locations(p=True) -> vc.Beacon:
+def load_beacon_locations() -> vc.Beacon:
     beacons: vc.Beacon = pd.read_csv("beacons_proj.csv", header=0, index_col="name")
-    # beacons.set_index('name', inplace=True)
-    if p:
+    if debug_bool:
         print(beacons)
 
     return beacons
 
 # read meas
-def load_measurements(p=False):
+def load_measurements():
     filename = "measurement_proj.p"
     with open(filename, 'rb') as f:
         measurements = pickle.load(f)
-    if p:
+    if debug_bool:
         print(type(measurements))
         print(measurements)
 
     print("#meas: {}".format(len(measurements)))
-    meas=[]
+    meas = []
     names_set=set()
     timestamps_set=set()
     mean_beacon_per_meas=0
     for measurement in measurements:
-
-        #TODO
-        measurement.delete_col("dist")
-        measurement.delete_col("dist2d")
-        measurement.beacon_data.drop(columns='dist', axis=1)
-
+        measurement.beacon_data.drop('dist', 1, inplace=True)
+        measurement.beacon_data.drop('dist2d', 1, inplace=True)
 
         meas.append(measurement)
         names_set.add(measurement.device_name)
@@ -57,9 +52,9 @@ def load_measurements(p=False):
     #if p:print(meas)
     return meas
 
-def load_calibration(p=False):
+def load_calibration():
     calib = pd.read_csv("calibration_proj.csv")
-    if p:print(calib)
+    if debug_bool:print(calib)
     return calib
 
 def add_if_not(liste, value):
@@ -72,7 +67,7 @@ def visualize_device(meas, beacons):
     location_dot = 0.45
     offset = np.array([0.6,0.3])    # offset for annotations
     legend: list = []
-    fig = plt.figure(figsize=[8,8])
+    fig = plt.figure(figsize=[12,12])
     ax = plt.axes()
 
     real_pos = meas.get_real_location()
@@ -96,38 +91,48 @@ def visualize_device(meas, beacons):
     ax.add_patch(plt.Circle(beacons_location_mean[0:2], radius=location_dot, color='black', fc='black'))
     plt.annotate("mean", beacons_location_mean[0:2] + offset)
     add_if_not(legend, "mean")
-
+    cir_list = []
     for name in beacons.index.values.tolist():
-        print("beacon {}".format(name))
+        # if debug_bool:print("beacon: {} x: {} y: {} z: {} dist: {} est: {} ".format(name, beacon_location[0], beacon_location[1], beacon_location[2], dist, est))
+        # # [0:2] nur index 0 bis exkl 2 nehmen
+        # ax.add_patch(plt.Circle(beacon_location[0:2], radius=b_dot, fc='b'))
+        # add_if_not(legend,"Beacon location")
+        # beacons_annotation = "{}".format(name)
+
+        # print("beacon {}".format(name))
         beacon_location = beacons.loc[name].values
-        ax.add_patch(plt.Circle(beacon_location[0:2], radius=b_dot, fc='b'))
-        add_if_not(legend,"Beacon location")
-        beacons_annotation = "{}".format(beacon_location[0])
+        cir = plt.Circle(beacon_location[0:2], radius=b_dot, fc='b')
+        cir_list.append(cir)
+        ax.add_patch(cir)
+        # add_if_not(legend,"Beacon location")
 
+        # beacons_annotation = "{}".format(beacon_location[0])
+    plt.legend(handles=cir_list, loc='lower right')
 
-    for name, dist, est in zip(meas.get_beacon_names(), meas.get_beacon_dists(), meas.get_beacon_est()):
+    for name, est in zip(meas.get_beacon_names(), meas.get_beacon_est()):
         beacon_location = beacons.loc[name].values
 
-        print("beacon: {} x: {} y: {} z: {} dist: {} est: {} ".format(name, beacon_location[0], beacon_location[1], beacon_location[2], dist, est))
-        # [0:2] nur index 0 bis exkl 2 nehmen
-        ax.add_patch(plt.Circle(beacon_location[0:2], radius=b_dot, fc='b'))
-        add_if_not(legend,"Beacon location")
-        beacons_annotation = "{}".format(name)
+        # if debug_bool:print("beacon: {} x: {} y: {} z: {} dist: {} est: {} ".format(name, beacon_location[0], beacon_location[1], beacon_location[2], dist, est))
+        # # [0:2] nur index 0 bis exkl 2 nehmen
+        # ax.add_patch(plt.Circle(beacon_location[0:2], radius=b_dot, fc='b'))
+        # add_if_not(legend,"Beacon location")
+        # beacons_annotation = "{}".format(name)
 
-        if ~np.isnan(dist):
-            #print("add dist")
-            ax.add_patch(plt.Circle(beacon_location[0:2], radius=dist, alpha=0.3, color='orange', fill=False))
-            add_if_not(legend,"real Dist")
-            beacons_annotation = "{} dist: {:.2f}".format(beacons_annotation, dist)
+        # if ~np.isnan(dist):
+        #     #print("add dist")
+        #     ax.add_patch(plt.Circle(beacon_location[0:2], radius=dist, alpha=0.3, color='orange', fill=False))
+        #     add_if_not(legend,"real Dist")
+        #     beacons_annotation = "{} dist: {:.2f}".format(beacons_annotation, dist)
 
         if ~np.isnan(est):
             disc = "Estimated distance"
             # print("add {}".format(disc))
             ax.add_patch(plt.Circle(beacon_location[0:2], radius=est, alpha=0.3, color='red', fill=False))
             add_if_not(legend,disc)
-            beacons_annotation = "{} est: {:.2f}".format(beacons_annotation, est)
+            beacons_annotation = "{} est: {:.2f}".format(name, est)
+            plt.annotate(beacons_annotation, beacon_location[0:2] + offset)
         #ax.add_patch(plt.Circle(beacon_location[0:2], radius=dist2d, alpha=0.3, color='black', fill=False))
-        plt.annotate(beacons_annotation, beacon_location[0:2] + offset)
+
 
     #plt.axis('scaled')   # alternative: plt.axis([xmin, xmax, ymin, ymax])
     plt.axis([0, 100, 0, 100])
@@ -243,6 +248,9 @@ def main():
     #ONLY FIRST ONE FOR START...
     meas = load_measurements()
 
+    name = []
+    time = []
+    location = []
     for measurement in meas:
         #calc dists to beacons from rssi
         measurement = calc_dists_with_calibs(measurement, c0, n) ##??? somethin g to do in here ;) should we use "est" or "dist"?
@@ -252,8 +260,14 @@ def main():
 
         #vis device
         visualize_device(measurement, beacons)
+        name.append(measurement.device_name)
+        time.append(measurement.timestamp)
+        location.append(measurement.device_est_position)
 
-
+    print("{}, {}, {}".format(len(name), len(time), len(location)))
+    d = {'name': name, 'time': time, 'location': location}
+    df = pd.DataFrame(data=d)
+    df.to_csv('out/out.csv', index=False)
     print(meas)
 
 
