@@ -22,11 +22,29 @@ def load_measurements(p=False):
     filename = "measurement_proj.p"
     with open(filename, 'rb') as f:
         measurements = pickle.load(f)
-    if p:print(type(measurements))
-    print("meas.size: {}".format(len(measurements)))
+    if p:
+        print(type(measurements))
+        print(measurements)
+
+    print("#meas: {}".format(len(measurements)))
+    meas=[]
+    names_set=set()
+    timestamps_set=set()
+    mean_beacon_per_meas=0
+    for measurement in measurements:
+        meas.append(measurement)
+        names_set.add(measurement.device_name)
+        timestamps_set.add(measurement.timestamp)
+        mean_beacon_per_meas+=len(measurement.get_beacon_names())
+    mean_beacon_per_meas/=len(measurements)
+    print("#beacons per meas (avg. ): {}".format(mean_beacon_per_meas))
+    print("devices: {}".format(names_set))
+    print("timestamps: {}".format(timestamps_set))
+    print("#timestamps: {}".format(len(timestamps_set)))
+
     # select one measurement
-    meas: vc.Measurement = measurements[0]
-    if p:print(meas)
+    #meas: vc.Measurement = measurements[0]
+    #if p:print(meas)
     return meas
 
 def load_calibration(p=False):
@@ -142,11 +160,16 @@ def calc_c0_n(calib):
     # from log-distance path loss model for calibration
     res = stats.linregress(-10.0 * np.log10(dists), rssis)
 
-    print("intercept: {}, slope: {}".format(res.intercept, res.slope))
+    #first try static data
     #c0 = -50
     #n = 2
+
+    #calculated data
+    #c0: -37.45877267729592
+    #n: 2.689458542605622
     c0=res.intercept
     n=res.slope
+    print("Calibration result: c0: {}, n: {}".format(c0, n))
 
     #print("RSSIs {}".format(rssis))
 
@@ -200,18 +223,18 @@ def main():
     #ONLY FIRST ONE FOR START...
     meas = load_measurements()
 
-    #calc dists to beacons from rssi
-    meas = calc_dists_with_calibs(meas, c0, n) ##??? somethin g to do in here ;) should we use "est" or "dist"?
+    for measurement in meas:
+        #calc dists to beacons from rssi
+        measurement = calc_dists_with_calibs(measurement, c0, n) ##??? somethin g to do in here ;) should we use "est" or "dist"?
 
-    #calc position
-    meas = calc_location(beacons, meas)
+        #calc position of this measurement (device and time)
+        measurement = calc_location(beacons, measurement)
+
+        #vis device
+        #visualize_device(measurement, beacons)
+
 
     print(meas)
-
-
-    #vis device
-    visualize_device(meas, beacons)
-
 
 if __name__ == "__main__":
     main()
