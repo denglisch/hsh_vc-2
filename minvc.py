@@ -45,7 +45,7 @@ class Measurement:
         
     def __repr__(self):
         return "device: " + self.device_name + ", timestamp: " + str(self.timestamp) \
-               + ", location: " + str(self.actual_location) + "\n" + str(self.beacon_data)
+               + ", est_location: " + str(self.device_est_position) + "\n" + str(self.beacon_data)
 
     def get_device_est_position(self):
         return self.device_est_position
@@ -75,6 +75,10 @@ class Measurement:
 
     def set_real_location(self, real_location):
         self.actual_location=real_location
+
+    def delete_col(self, id):
+        #self.beacon_data.drop(id, axis=1)
+        self.beacon_data.drop(columns=id)
 
     # get 2D beacon distances as np.array
     def get_beacon_dists2d(self):

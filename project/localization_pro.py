@@ -32,10 +32,18 @@ def load_measurements(p=False):
     timestamps_set=set()
     mean_beacon_per_meas=0
     for measurement in measurements:
+
+        #TODO
+        measurement.delete_col("dist")
+        measurement.delete_col("dist2d")
+        measurement.beacon_data.drop(columns='dist', axis=1)
+
+
         meas.append(measurement)
         names_set.add(measurement.device_name)
         timestamps_set.add(measurement.timestamp)
         mean_beacon_per_meas+=len(measurement.get_beacon_names())
+
     mean_beacon_per_meas/=len(measurements)
     print("#beacons per meas (avg. ): {}".format(mean_beacon_per_meas))
     print("devices: {}".format(names_set))
@@ -62,8 +70,13 @@ def visualize_device(meas, beacons):
     location_dot = 0.45
     offset = np.array([0.6,0.3])    # offset for annotations
     legend: list = []
-    fig = plt.figure(figsize=[5,5])
+    fig = plt.figure(figsize=[8,8])
+    #plt.xlim([0,100])
+    #plt.ylim([0,100])
     ax = plt.axes()
+    #ax = plt.axes([0,0,100,100])
+    #ax.set_xlim([0,100])
+    #ax.set_ylim([0,100])
 
     real_pos = meas.get_real_location()
     if real_pos is not None:
@@ -81,6 +94,11 @@ def visualize_device(meas, beacons):
         ax.add_patch(plt.Circle(pos[0:2], radius=location_dot, fc='red'))
         # plt.annotate(disc, pos[0:2] + offset)
         add_if_not(legend, disc)
+
+    beacons_location_mean=get_mean(beacons, meas)
+    ax.add_patch(plt.Circle(beacons_location_mean[0:2], radius=location_dot, color='black', fc='black'))
+    plt.annotate("mean", beacons_location_mean[0:2] + offset)
+    add_if_not(legend, "mean")
 
     for name, dist, est in zip(meas.get_beacon_names(), meas.get_beacon_dists(), meas.get_beacon_est()):
         beacon_location = beacons.loc[name].values
@@ -106,13 +124,8 @@ def visualize_device(meas, beacons):
         #ax.add_patch(plt.Circle(beacon_location[0:2], radius=dist2d, alpha=0.3, color='black', fill=False))
         plt.annotate(beacons_annotation, beacon_location[0:2] + offset)
 
-
-    beacons_location_mean=get_mean(beacons, meas)
-    ax.add_patch(plt.Circle(beacons_location_mean[0:2], radius=location_dot, color='black', fc='black'))
-    plt.annotate("mean", beacons_location_mean[0:2] + offset)
-    add_if_not(legend, "mean")
-
-    plt.axis('scaled')   # alternative: plt.axis([xmin, xmax, ymin, ymax])
+    #plt.axis('scaled')   # alternative: plt.axis([xmin, xmax, ymin, ymax])
+    plt.axis([0, 100, 0, 100])
     plt.legend(legend)
     plt.show()
 
@@ -146,9 +159,9 @@ def visualize_rssi_dist(calib, c0, n):
 def calc_dists_with_calibs(meas, c0, n):
     rssi_conv = vc.RSSIConverter(c0=c0, n=n, d0=1.0)
     beacon_ests = rssi_conv.get_dist(meas.get_beacon_rssis())
-    dists=meas.get_beacon_dists()
-    for idx, x in np.ndenumerate(dists):
-        dists[idx]=beacon_ests[idx]
+    #dists=meas.get_beacon_dists()
+    #for idx, x in np.ndenumerate(dists):
+    #    dists[idx]=beacon_ests[idx]
     meas.set_beacon_est(beacon_ests)
     return meas
 
@@ -200,7 +213,8 @@ def calc_location(beacons, meas):
     print("mean: {}".format(initial_location))
 
     beacon_locations = beacons.loc[meas.get_beacon_names()].values
-    beacon_dists=meas.get_beacon_dists()
+    #beacon_dists=meas.get_beacon_dists()
+    beacon_dists=meas.get_beacon_est()
 
     #running least squares
     result=optimize.least_squares(residual, initial_location, args=(beacon_locations, beacon_dists))
@@ -210,7 +224,7 @@ def calc_location(beacons, meas):
 
     #meas.set_device_est_position([10,45]) # <- zum testen
     meas.set_device_est_position(solution)
-    meas.set_real_location(solution)
+    #meas.set_real_location(solution)
     return meas
 
 def main():
@@ -232,24 +246,32 @@ def main():
         measurement = calc_location(beacons, measurement)
 
         #vis device
-        #visualize_device(measurement, beacons)
+        visualize_device(measurement, beacons)
 
 
     print(meas)
 
-    #TODO save meas into csv
-    #list with
-    #-device location (actual location)
 
-    #TODO est or dist?
-    #TODO calc dist2d or remove ;)
+    #CR
+    #TODO est or dist? --> est, remove rest
+    # cleanup load functions
+    #TODO calc dist2d or remove ;) -->remove
+    #TODO save meas into csv
+    # device: d0, timestamp: 2021-05-11 11:40:00, est_location: [47.09392202 48.1984661   2.44212059]
+
+    #KD
     #TODO cleanup code
+    # amd comment
     #TODO use only strongest rssi (how much?)
+    # threashold or best 5?
+    #TODO make nice visualization (on timestamps or something...)
+    # or choose fix axis values and save images or something like this...
+    # highlight relevant beacons
+    # trace route
+
+    #delayed
     #TODO generate testdata with simluation (with real location) to test results
     #TODO check if calculated distances match the visualization
-
-    #TODO make nice visualization (on timestamps or something...)
-    #or choose fix axis values and save images or something like this...
 
 if __name__ == "__main__":
     main()
