@@ -264,11 +264,11 @@ def main():
         time.append(measurement.timestamp)
         location.append(measurement.device_est_position)
 
-    print("{}, {}, {}".format(len(name), len(time), len(location)))
+    # print("{}, {}, {}".format(len(name), len(time), len(location)))
     d = {'name': name, 'time': time, 'location': location}
     df = pd.DataFrame(data=d)
     df.to_csv('out/out.csv', index=False)
-    print(meas)
+    # print(meas)
 
 
     #CR
