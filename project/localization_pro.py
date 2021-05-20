@@ -11,26 +11,27 @@ import minvc as vc
 
 
 # read beacon locations
-def load_beacon() -> vc.Beacon:
+def load_beacon_locations(p=False) -> vc.Beacon:
     beacons: vc.Beacon = pd.read_csv("beacons_proj.csv")
     beacons.set_index('name', inplace=True)
-    print(beacons)
+    if p:print(beacons)
     return beacons
 
 # read meas
-def load_meas():
+def load_measurements(p=False):
     filename = "measurement_proj.p"
     with open(filename, 'rb') as f:
         measurements = pickle.load(f)
-    print(type(measurements))
+    if p:print(type(measurements))
+    print("meas.size: {}".format(len(measurements)))
     # select one measurement
     meas: vc.Measurement = measurements[0]
-    print(meas)
+    if p:print(meas)
     return meas
 
-def load_calibration():
+def load_calibration(p=False):
     calib = pd.read_csv("calibration_proj.csv")
-    print(calib)
+    if p:print(calib)
     return calib
 
 def add_if_not(liste, value):
@@ -66,14 +67,14 @@ def visualize_device(meas, beacons):
     for name, dist, est in zip(meas.get_beacon_names(), meas.get_beacon_dists(), meas.get_beacon_est()):
         beacon_location = beacons.loc[name].values
 
-        print("beacon: {} x: {} y: {} dist: {} est: {} ".format(name, beacon_location[0], beacon_location[1], dist, est))
+        print("beacon: {} x: {} y: {} z: {} dist: {} est: {} ".format(name, beacon_location[0], beacon_location[1], beacon_location[2], dist, est))
         # [0:2] nur index 0 bis exkl 2 nehmen
         ax.add_patch(plt.Circle(beacon_location[0:2], radius=b_dot, fc='b'))
         add_if_not(legend,"Beacon location")
         beacons_annotation = "{}".format(name)
 
         if ~np.isnan(dist):
-            print("add dist")
+            #print("add dist")
             ax.add_patch(plt.Circle(beacon_location[0:2], radius=dist, alpha=0.3, color='orange', fill=False))
             add_if_not(legend,"real Dist")
             beacons_annotation = "{} dist: {:.2f}".format(beacons_annotation, dist)
@@ -88,67 +89,125 @@ def visualize_device(meas, beacons):
         plt.annotate(beacons_annotation, beacon_location[0:2] + offset)
 
 
+    beacons_location_mean=get_mean(beacons, meas)
+    ax.add_patch(plt.Circle(beacons_location_mean[0:2], radius=location_dot, color='black', fc='black'))
+    plt.annotate("mean", beacons_location_mean[0:2] + offset)
+    add_if_not(legend, "mean")
+
     plt.axis('scaled')   # alternative: plt.axis([xmin, xmax, ymin, ymax])
     plt.legend(legend)
     plt.show()
 
 
 # scatter plot of RSSI vs. distance
-def visualize_rssi_dist(calib):
+def visualize_rssi_dist(calib, c0, n):
     rssis= calib['rssi'].values
     dists = calib['dist'].values
-    res = stats.linregress(dists, rssis)
-    print("intercept: {}, slope: {}".format(res.intercept,res.slope))
-    print("RSSIs {}".format(rssis))
-    plt.scatter(dists, rssis)
-    plt.plot(dists, res.intercept + res.slope*dists, 'r', label='fitted line')
 
-    plt.title("RSSI vs. distance")
+    #calc linear dependence
+    res = stats.linregress(dists, rssis)
+    #print("intercept: {}, slope: {}".format(res.intercept,res.slope))
+    #print("RSSIs {}".format(rssis))
+    #plot rssis
+    plt.scatter(dists, rssis, c='b', label='RSSIs')
+    #plot line
+    plt.plot(dists, res.intercept + res.slope*dists, 'g', label='fitted line')
+
+    #plot fitted curve
+    min=np.amin(dists)
+    max=np.amax(dists)
+    d = np.linspace(min, max, 20)
+    plt.plot(d, c0 - 10.0 * n * np.log10(d), 'r', label='fitted curve')
+
+    plt.title("Dependence of RSSI on distance")
     plt.xlabel("Distance")
     plt.ylabel("RSSI")
     plt.legend()
     plt.show()
-    return res
 
-def calc_est(meas, c0, n):
+def calc_dists_with_calibs(meas, c0, n):
     rssi_conv = vc.RSSIConverter(c0=c0, n=n, d0=1.0)
-    beacon_est = rssi_conv.get_dist(meas.get_beacon_rssis())
-    meas.set_beacon_est(beacon_est)
+    beacon_ests = rssi_conv.get_dist(meas.get_beacon_rssis())
+    dists=meas.get_beacon_dists()
+    for idx, x in np.ndenumerate(dists):
+        dists[idx]=beacon_ests[idx]
+    meas.set_beacon_est(beacon_ests)
     return meas
 
-def calc_c0_n(calib, res):
-    # ??? hier muss c0 und n berechnet werden
-    c0 = -50
-    n = 2
+def calc_c0_n(calib):
     rssis = calib['rssi'].values
     dists = calib['dist'].values
-    print("intercept {}, slope {}".format(res.intercept, res.slope))
-    for dist, rssi in zip(dists, rssis):
-        print("dist {}, rssi {} rssi_est {}".format(dist, rssi, res.intercept + res.slope * dist))
-        print("rssi {} dist {}, dist_est {}".format(rssi, dist, (rssi - res.intercept) / res.slope))
+
+    #put dists and rssis in linreg to calc c0 and n
+    # from log-distance path loss model for calibration
+    res = stats.linregress(-10.0 * np.log10(dists), rssis)
+
+    print("intercept: {}, slope: {}".format(res.intercept, res.slope))
+    #c0 = -50
+    #n = 2
+    c0=res.intercept
+    n=res.slope
+
+    #print("RSSIs {}".format(rssis))
+
+    #for dist, rssi in zip(dists, rssis):
+    #    print("dist {}, rssi {} rssi_est {}".format(dist, rssi, res.intercept + res.slope * dist))
+    #    print("rssi {} dist {}, dist_est {}".format(rssi, dist, (rssi - res.intercept) / res.slope))
     # rssi = inter + slopw * dist
     # r = i+s*d
 
     return c0, n
 
-def calc_location(meas):
-    # ??? Hier fehtl die berechnung des punktes
-    meas.set_device_est_position([10,45]) # <- zum testen
+def get_mean(beacons, meas):
+    beacons_locations=beacons.loc[meas.get_beacon_names()].values
+    #np.mean(beacons[1:4], 0)
+    mean=beacons_locations.mean(axis=0)
+    return mean
+
+def residual(device_location, beacon_locations, measured_dists):
+    """'device_location' is estimated tracking device location"""
+    diff_ri_p=beacon_locations-device_location
+    dist_ri_p=np.linalg.norm(diff_ri_p,axis=1)
+    cur_error=measured_dists-dist_ri_p
+    return cur_error
+
+def calc_location(beacons, meas):
+    initial_location=get_mean(beacons, meas)
+    print("mean: {}".format(initial_location))
+
+    beacon_locations = beacons.loc[meas.get_beacon_names()].values
+    beacon_dists=meas.get_beacon_dists()
+
+    #running least squares
+    result=optimize.least_squares(residual, initial_location, args=(beacon_locations, beacon_dists))
+    solution=result.x
+
+    print("solution: {}".format(solution))
+
+    #meas.set_device_est_position([10,45]) # <- zum testen
+    meas.set_device_est_position(solution)
+    meas.set_real_location(solution)
     return meas
 
 def main():
     # vis calib
     calib = load_calibration()
-    res = visualize_rssi_dist(calib)
-    c0, n = calc_c0_n(calib, res)
+    c0, n = calc_c0_n(calib)
+    #visualize_rssi_dist(calib, c0, n)
 
-    #load
-    beacons = load_beacon()
-    meas = load_meas()
+    #load measured data
+    beacons = load_beacon_locations()
+    #ONLY FIRST ONE FOR START...
+    meas = load_measurements()
 
-    #calc
-    meas = calc_est(meas, c0, n)
-    meas = calc_location(meas)
+    #calc dists to beacons from rssi
+    meas = calc_dists_with_calibs(meas, c0, n) ##??? somethin g to do in here ;) should we use "est" or "dist"?
+
+    #calc position
+    meas = calc_location(beacons, meas)
+
+    print(meas)
+
 
     #vis device
     visualize_device(meas, beacons)
