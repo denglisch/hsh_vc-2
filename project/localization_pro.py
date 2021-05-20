@@ -11,9 +11,9 @@ import minvc as vc
 
 
 # read beacon locations
-def load_beacon_locations(p=False) -> vc.Beacon:
-    beacons: vc.Beacon = pd.read_csv("beacons_proj.csv")
-    beacons.set_index('name', inplace=True)
+def load_beacon_locations(p=True) -> vc.Beacon:
+    beacons: vc.Beacon = pd.read_csv("beacons_proj.csv", header=0, index_col="name")
+    # beacons.set_index('name', inplace=True)
     if p:
         print(beacons)
 
@@ -97,7 +97,7 @@ def visualize_device(meas, beacons):
     plt.annotate("mean", beacons_location_mean[0:2] + offset)
     add_if_not(legend, "mean")
 
-    for name in beacons['name'].values:
+    for name in beacons.index.values.tolist():
         print("beacon {}".format(name))
         beacon_location = beacons.loc[name].values
         ax.add_patch(plt.Circle(beacon_location[0:2], radius=b_dot, fc='b'))
