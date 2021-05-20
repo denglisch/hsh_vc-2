@@ -9,6 +9,11 @@ import matplotlib.pyplot as plt
 from scipy import optimize, stats
 import minvc as vc
 
+import matplotlib
+#import matplotlib.animation as animation
+from matplotlib.widgets import Slider
+
+
 debug_bool = False
 # read beacon locations
 def load_beacon_locations() -> vc.Beacon:
@@ -145,9 +150,6 @@ def visualize_rssi_dist(calib, c0, n):
 def calc_dists_with_calibs(meas, c0, n):
     rssi_conv = vc.RSSIConverter(c0=c0, n=n, d0=1.0)
     beacon_ests = rssi_conv.get_dist(meas.get_beacon_rssis())
-    #dists=meas.get_beacon_dists()
-    #for idx, x in np.ndenumerate(dists):
-    #    dists[idx]=beacon_ests[idx]
     meas.set_beacon_est(beacon_ests)
     return meas
 
@@ -212,6 +214,84 @@ def calc_location(beacons, meas):
     #meas.set_real_location(solution)
     return meas
 
+def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
+
+    #TODO: need to be sure, that there is only one measuremnt for timestamp
+    meas=measurements[timestamp_index]
+
+    #prepare axes
+    ax.clear()
+    ax.axis([0, 100, 0, 100])
+
+    col_est='red'
+    col_beacon='blue'
+    col_mean='black'
+    col_dist='red'
+
+    b_dot = 0.25                    # radius for dots
+    location_dot = 0.45
+    offset = np.array([0.6,0.3])    # offset for annotations
+    offset_dist = np.array([0.6,-1])    # offset for annotations
+    legend: list = []
+
+    #estimated location
+    pos = meas.get_device_est_position()
+    if pos is not None:
+        disc = "Estimated location"
+        ax.add_patch(plt.Circle(pos[0:2], radius=location_dot, fc=col_est))
+        ax.annotate(disc, pos[0:2] + offset)
+        add_if_not(legend, disc)
+
+    #mean
+    beacons_location_mean=get_mean(beacons, meas)
+    if beacons_location_mean is not None:
+        disc = "Mean"
+        ax.add_patch(plt.Circle(beacons_location_mean[0:2], radius=location_dot, fc=col_mean))
+        ax.annotate(disc, beacons_location_mean[0:2] + offset)
+        add_if_not(legend, disc)
+
+    #beacons
+    cir_list = []
+    for name in beacons.index.values.tolist():
+        beacon_location = beacons.loc[name].values
+        cir = plt.Circle(beacon_location[0:2], radius=b_dot, fc=col_beacon, alpha=0.3)
+        cir_list.append(cir)
+        ax.add_patch(cir)
+        ax.annotate(name, beacon_location[0:2] + offset, alpha=0.3)
+    ax.legend(handles=cir_list)
+
+    #distances
+    for name, est in zip(meas.get_beacon_names(), meas.get_beacon_est()):
+        beacon_location = beacons.loc[name].values
+        if ~np.isnan(est):
+            disc = "Estimated distance"
+            # print("add {}".format(disc))
+            def clamp(n, smallest, largest): return max(smallest, min(n, largest))#from: https://stackoverflow.com/questions/4092528/how-to-clamp-an-integer-to-some-range
+            alpha=clamp(abs(1.0/100*(est-50)),0,1)
+            #print(alpha)
+            ax.add_patch(plt.Circle(beacon_location[0:2], radius=est, alpha=alpha, color=col_dist, fill=False))
+            ax.add_patch(plt.Circle(beacon_location[0:2], radius=est, alpha=alpha/10, color=col_dist, fill=True))
+            add_if_not(legend, disc)
+            #beacons_annotation = "{} est: {:.2f}".format(name, est)
+            #ax.annotate(name, beacon_location[0:2] + offset)
+            ax.annotate("est: {:.2f}".format(est), beacon_location[0:2] + offset_dist)
+
+            #emph measured beacons
+            ax.annotate(name, beacon_location[0:2] + offset)
+            ax.add_patch(plt.Circle(beacon_location[0:2], radius=b_dot, fc=col_beacon))
+
+
+    #TODO: trace route for multiple devices
+    if timestamp_index>0:
+        for i in range(1,timestamp_index+1):
+            from_loc=measurements[i-1].get_device_est_position()[0:2]
+            to_loc=measurements[i].get_device_est_position()[0:2]
+            #print("from: {} to: {}".format(from_loc,to_loc))
+            ax.plot([from_loc[0], to_loc[0]],[from_loc[1], to_loc[1]], 'bo-')
+            ax.annotate("time: {}".format(measurements[i-1].timestamp), from_loc + offset_dist)
+            
+    ax.legend(legend, loc="lower right")
+
 def main():
     # vis calib
     calib = load_calibration()
@@ -223,22 +303,49 @@ def main():
     #ONLY FIRST ONE FOR START...
     meas = load_measurements()
 
+    #calc dists for loaded data
     name = []
     time = []
     location = []
     for measurement in meas:
         #calc dists to beacons from rssi
-        measurement = calc_dists_with_calibs(measurement, c0, n) ##??? somethin g to do in here ;) should we use "est" or "dist"?
+        measurement = calc_dists_with_calibs(measurement, c0, n)
 
         #calc position of this measurement (device and time)
         measurement = calc_location(beacons, measurement)
 
-        #vis device
-        #visualize_device(measurement, beacons)
         name.append(measurement.device_name)
         time.append(measurement.timestamp)
         location.append(measurement.device_est_position)
 
+        #vis device
+        #visualize_device(measurement, beacons)
+
+    #TODO Sort meas for timestamp (if there would be more ;) )
+
+    #prepare plot
+    fig, ax = plt.subplots(figsize=[12, 12])
+    #init vis
+    visualize_device_in_time_update(meas, beacons, 0, ax)
+    #Slider (widget example adapted from: https://riptutorial.com/matplotlib/example/23577/interactive-controls-with-matplotlib-widgets)
+    #slider axes
+    slider_ax = plt.axes([0.25, .03, 0.50, 0.02])
+    timestamp_slider = Slider(slider_ax, 'Timestamp', 0, len(time)-1, valinit=0, valstep=1)
+    #defined locally to have all values here
+    def update_vis(val):
+        #get selected timestamp
+        timestamp=time[val]
+        print("timestamp changed ({})".format(timestamp))
+        #rebuild vis on axes
+        visualize_device_in_time_update(meas, beacons, val, ax)
+        fig.canvas.draw_idle()
+
+    # call update function on slider value change
+    timestamp_slider.on_changed(update_vis)
+    #finally show plot
+    plt.show()
+
+    #save calculated data
     # print("{}, {}, {}".format(len(name), len(time), len(location)))
     d = {'name': name, 'time': time, 'location': location}
     df = pd.DataFrame(data=d)
@@ -258,10 +365,9 @@ def main():
     # amd comment
     #TODO use only strongest rssi (how much?)
     # threashold or best 5?
-    #TODO make nice visualization (on timestamps or something...)
-    # or choose fix axis values and save images or something like this...
-    # highlight relevant beacons
-    # trace route
+    #TODO done: make nice visualization (on timestamps or something...)
+    #TODO: highlight relevant beacons
+    #TODO: trace route
 
     #delayed
     #TODO generate testdata with simluation (with real location) to test results
