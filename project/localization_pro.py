@@ -236,5 +236,16 @@ def main():
 
     print(meas)
 
+    #TODO save meas into csv
+    #list with
+    #-device location (actual location)
+
+    #TODO est or dist?
+    #TODO calc dist2d or remove ;)
+    #TODO use only strongest rssi (how much?)
+    #TODO generate testdata with simluation (with real location) to test results
+    #TODO check if calculated distances match the visualization
+
+
 if __name__ == "__main__":
     main()
