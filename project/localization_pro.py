@@ -242,10 +242,13 @@ def main():
 
     #TODO est or dist?
     #TODO calc dist2d or remove ;)
+    #TODO cleanup code
     #TODO use only strongest rssi (how much?)
     #TODO generate testdata with simluation (with real location) to test results
     #TODO check if calculated distances match the visualization
 
+    #TODO make nice visualization (on timestamps or something...)
+    #or choose fix axis values and save images or something like this...
 
 if __name__ == "__main__":
     main()
