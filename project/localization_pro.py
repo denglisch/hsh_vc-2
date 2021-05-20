@@ -14,7 +14,9 @@ import minvc as vc
 def load_beacon_locations(p=False) -> vc.Beacon:
     beacons: vc.Beacon = pd.read_csv("beacons_proj.csv")
     beacons.set_index('name', inplace=True)
-    if p:print(beacons)
+    if p:
+        print(beacons)
+
     return beacons
 
 # read meas
@@ -71,12 +73,7 @@ def visualize_device(meas, beacons):
     offset = np.array([0.6,0.3])    # offset for annotations
     legend: list = []
     fig = plt.figure(figsize=[8,8])
-    #plt.xlim([0,100])
-    #plt.ylim([0,100])
     ax = plt.axes()
-    #ax = plt.axes([0,0,100,100])
-    #ax.set_xlim([0,100])
-    #ax.set_ylim([0,100])
 
     real_pos = meas.get_real_location()
     if real_pos is not None:
@@ -99,6 +96,14 @@ def visualize_device(meas, beacons):
     ax.add_patch(plt.Circle(beacons_location_mean[0:2], radius=location_dot, color='black', fc='black'))
     plt.annotate("mean", beacons_location_mean[0:2] + offset)
     add_if_not(legend, "mean")
+
+    for name in beacons['name'].values:
+        print("beacon {}".format(name))
+        beacon_location = beacons.loc[name].values
+        ax.add_patch(plt.Circle(beacon_location[0:2], radius=b_dot, fc='b'))
+        add_if_not(legend,"Beacon location")
+        beacons_annotation = "{}".format(beacon_location[0])
+
 
     for name, dist, est in zip(meas.get_beacon_names(), meas.get_beacon_dists(), meas.get_beacon_est()):
         beacon_location = beacons.loc[name].values
