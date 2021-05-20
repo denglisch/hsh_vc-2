@@ -189,6 +189,7 @@ def get_mean(beacons, meas):
 
 def residual(device_location, beacon_locations, measured_dists):
     """'device_location' is estimated tracking device location"""
+    #delta_i=d_i-d(r_i,p)
     diff_ri_p=beacon_locations-device_location
     dist_ri_p=np.linalg.norm(diff_ri_p,axis=1)
     cur_error=measured_dists-dist_ri_p
