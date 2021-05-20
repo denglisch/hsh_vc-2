@@ -93,36 +93,15 @@ def visualize_device(meas, beacons):
     add_if_not(legend, "mean")
     cir_list = []
     for name in beacons.index.values.tolist():
-        # if debug_bool:print("beacon: {} x: {} y: {} z: {} dist: {} est: {} ".format(name, beacon_location[0], beacon_location[1], beacon_location[2], dist, est))
-        # # [0:2] nur index 0 bis exkl 2 nehmen
-        # ax.add_patch(plt.Circle(beacon_location[0:2], radius=b_dot, fc='b'))
-        # add_if_not(legend,"Beacon location")
-        # beacons_annotation = "{}".format(name)
-
-        # print("beacon {}".format(name))
         beacon_location = beacons.loc[name].values
         cir = plt.Circle(beacon_location[0:2], radius=b_dot, fc='b')
         cir_list.append(cir)
         ax.add_patch(cir)
-        # add_if_not(legend,"Beacon location")
 
-        # beacons_annotation = "{}".format(beacon_location[0])
-    plt.legend(handles=cir_list, loc='lower right')
+    plt.legend(handles=cir_list)
 
     for name, est in zip(meas.get_beacon_names(), meas.get_beacon_est()):
         beacon_location = beacons.loc[name].values
-
-        # if debug_bool:print("beacon: {} x: {} y: {} z: {} dist: {} est: {} ".format(name, beacon_location[0], beacon_location[1], beacon_location[2], dist, est))
-        # # [0:2] nur index 0 bis exkl 2 nehmen
-        # ax.add_patch(plt.Circle(beacon_location[0:2], radius=b_dot, fc='b'))
-        # add_if_not(legend,"Beacon location")
-        # beacons_annotation = "{}".format(name)
-
-        # if ~np.isnan(dist):
-        #     #print("add dist")
-        #     ax.add_patch(plt.Circle(beacon_location[0:2], radius=dist, alpha=0.3, color='orange', fill=False))
-        #     add_if_not(legend,"real Dist")
-        #     beacons_annotation = "{} dist: {:.2f}".format(beacons_annotation, dist)
 
         if ~np.isnan(est):
             disc = "Estimated distance"
@@ -131,10 +110,7 @@ def visualize_device(meas, beacons):
             add_if_not(legend,disc)
             beacons_annotation = "{} est: {:.2f}".format(name, est)
             plt.annotate(beacons_annotation, beacon_location[0:2] + offset)
-        #ax.add_patch(plt.Circle(beacon_location[0:2], radius=dist2d, alpha=0.3, color='black', fill=False))
 
-
-    #plt.axis('scaled')   # alternative: plt.axis([xmin, xmax, ymin, ymax])
     plt.axis([0, 100, 0, 100])
     plt.legend(legend)
     plt.show()
@@ -272,10 +248,10 @@ def main():
 
 
     #CR
-    #TODO est or dist? --> est, remove rest
+    #TODO done est or dist? --> est, remove rest
     # cleanup load functions
-    #TODO calc dist2d or remove ;) -->remove
-    #TODO save meas into csv
+    #TODO done calc dist2d or remove ;) -->remove
+    #TODO done save meas into csv
     # device: d0, timestamp: 2021-05-11 11:40:00, est_location: [47.09392202 48.1984661   2.44212059]
 
     #KD
