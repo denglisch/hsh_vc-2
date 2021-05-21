@@ -289,7 +289,7 @@ def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
             #print("from: {} to: {}".format(from_loc,to_loc))
             ax.plot([from_loc[0], to_loc[0]],[from_loc[1], to_loc[1]], 'bo-')
             ax.annotate("time: {}".format(measurements[i-1].timestamp), from_loc + offset_dist)
-            
+
     ax.legend(legend, loc="lower right")
 
 def main():
@@ -329,13 +329,15 @@ def main():
     visualize_device_in_time_update(meas, beacons, 0, ax)
     #Slider (widget example adapted from: https://riptutorial.com/matplotlib/example/23577/interactive-controls-with-matplotlib-widgets)
     #slider axes
-    slider_ax = plt.axes([0.25, .03, 0.50, 0.02])
-    timestamp_slider = Slider(slider_ax, 'Timestamp', 0, len(time)-1, valinit=0, valstep=1)
+    #slider_ax = plt.axes([0.25, .03, 0.50, 0.02])
+    slider_ax = plt.axes([0.35, .03, 0.50, 0.02])
+    timestamp_slider = Slider(slider_ax, "Timestamp: {}".format(time[0]), 0, len(time)-1, valinit=0, valstep=1)
     #defined locally to have all values here
     def update_vis(val):
         #get selected timestamp
         timestamp=time[val]
-        print("timestamp changed ({})".format(timestamp))
+        print("Replot timestamp {}".format(timestamp))
+        timestamp_slider.label.set_text("Timestamp: {}".format(timestamp))
         #rebuild vis on axes
         visualize_device_in_time_update(meas, beacons, val, ax)
         fig.canvas.draw_idle()
