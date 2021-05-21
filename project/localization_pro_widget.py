@@ -39,6 +39,7 @@ def load_measurements():
     timestamps_set=set()
     mean_beacon_per_meas=0
     for measurement in measurements:
+        #drop unused cols
         measurement.beacon_data.drop('dist', 1, inplace=True)
         measurement.beacon_data.drop('dist2d', 1, inplace=True)
 
@@ -66,61 +67,6 @@ def load_calibration():
 def add_if_not(liste, value):
     if value not in liste:
         liste.append(value)
-
-# visualize beacon locations
-def visualize_device(meas, beacons):
-    b_dot = 0.25                    # radius for dots
-    location_dot = 0.45
-    offset = np.array([0.6,0.3])    # offset for annotations
-    legend: list = []
-    fig = plt.figure(figsize=[12,12])
-    ax = plt.axes()
-
-    real_pos = meas.get_real_location()
-    if real_pos is not None:
-        disc = "real location"
-        print("add {}".format(disc))
-        ax.add_patch(plt.Circle(real_pos[0:2], radius=location_dot, fc='orange'))
-        # plt.annotate(disc, real_pos[0:2] + offset)
-        add_if_not(legend, disc)
-
-    pos = meas.get_device_est_position()
-    if pos is not None:
-        disc = "Estimated location"
-        print("add {}".format(disc))
-
-        ax.add_patch(plt.Circle(pos[0:2], radius=location_dot, fc='red'))
-        # plt.annotate(disc, pos[0:2] + offset)
-        add_if_not(legend, disc)
-
-    beacons_location_mean=get_mean(beacons, meas)
-    ax.add_patch(plt.Circle(beacons_location_mean[0:2], radius=location_dot, color='black', fc='black'))
-    plt.annotate("mean", beacons_location_mean[0:2] + offset)
-    add_if_not(legend, "mean")
-    cir_list = []
-    for name in beacons.index.values.tolist():
-        beacon_location = beacons.loc[name].values
-        cir = plt.Circle(beacon_location[0:2], radius=b_dot, fc='b')
-        cir_list.append(cir)
-        ax.add_patch(cir)
-
-    plt.legend(handles=cir_list)
-
-    for name, est in zip(meas.get_beacon_names(), meas.get_beacon_est()):
-        beacon_location = beacons.loc[name].values
-
-        if ~np.isnan(est):
-            disc = "Estimated distance"
-            # print("add {}".format(disc))
-            ax.add_patch(plt.Circle(beacon_location[0:2], radius=est, alpha=0.3, color='red', fill=False))
-            add_if_not(legend,disc)
-            beacons_annotation = "{} est: {:.2f}".format(name, est)
-            plt.annotate(beacons_annotation, beacon_location[0:2] + offset)
-
-    plt.axis([0, 100, 0, 100])
-    plt.legend(legend)
-    plt.show()
-
 
 # scatter plot of RSSI vs. distance
 def visualize_rssi_dist(calib, c0, n):
@@ -231,6 +177,7 @@ def calc_location(beacons, meas):
     #meas.set_real_location(solution)
     return meas
 
+# visualize beacon locations
 def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
 
     #TODO: need to be sure, that there is only one measuremnt for timestamp
@@ -319,37 +266,7 @@ def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
 
     ax.legend(legend, loc="lower right")
 
-def main():
-    # vis calib
-    calib = load_calibration()
-    c0, n = calc_c0_n(calib)
-    #visualize_rssi_dist(calib, c0, n)
-
-    #load measured data
-    beacons = load_beacon_locations()
-    #ONLY FIRST ONE FOR START...
-    meas = load_measurements()
-
-    #calc dists for loaded data
-    name = []
-    time = []
-    location = []
-    for measurement in meas:
-        #calc dists to beacons from rssi
-        measurement = calc_dists_with_calibs(measurement, c0, n)
-
-        #calc position of this measurement (device and time)
-        measurement = calc_location(beacons, measurement)
-
-        name.append(measurement.device_name)
-        time.append(measurement.timestamp)
-        location.append(measurement.device_est_position)
-
-        #vis device
-        #visualize_device(measurement, beacons)
-
-    #TODO Sort meas for timestamp (if there would be more ;) )
-
+def visualize_device_2d(meas, beacons, time):
     #prepare plot
     fig, ax = plt.subplots(figsize=[12, 12])
     #init vis
@@ -374,37 +291,72 @@ def main():
     #finally show plot
     plt.show()
 
-    #save calculated data
+def save_to_csv(name, time, location):
     # print("{}, {}, {}".format(len(name), len(time), len(location)))
+    #TODO save as x, y, z
     d = {'name': name, 'time': time, 'location': location}
     df = pd.DataFrame(data=d)
     df.to_csv('out/out.csv', index=False)
-    #print(meas)
+
+def main():
+    # vis calib
+    print("Load calibration data")
+    calib = load_calibration()
+    c0, n = calc_c0_n(calib)
+    #visualize_rssi_dist(calib, c0, n)
+
+    #load measured data
+    print("Load beacons data")
+    beacons = load_beacon_locations()
+    print("Load measured data")
+    meas = load_measurements()
+
+    #Sort meas for timestamp (if there would be more ;) )
+    meas.sort(key=lambda m:m.timestamp)
+
+    #calc dists for loaded data
+    print("Calculate distances")
+    name = []
+    time = []
+    location = []
+    for measurement in meas:
+        #calc dists to beacons from rssi
+        measurement = calc_dists_with_calibs(measurement, c0, n)
+
+        #calc position of this measurement (device and time)
+        measurement = calc_location(beacons, measurement)
+
+        name.append(measurement.device_name)
+        time.append(measurement.timestamp)
+        location.append(measurement.device_est_position)
+
+    print(time)
+    print("Visualize 2D")
+    visualize_device_2d(meas, beacons, time)
+
+
+    #save calculated data
+    print("Save distances data")
+    save_to_csv(name, time, location)
+
 
     #CR
     #TODO save locations as x, y, z
     # device: d0, timestamp: 2021-05-11 11:40:00, x: 47.09392202, y: 48.1984661, z: 2.44212059
     #TODO: comment functions
 
-    #TODO: git cleanup
-    #TODO: Write README Howto install, run, etc.
-
-    #TODO: Info: currently not more than one device
-    #TODO: Info: currently not ordered timestamps
-
     #KD
     #TODO: cleanup code
     # and comment (with """xx""")
-
-    #open
-    #TODO: uncertainties
-    # estimate as ellipse
-
     #TODO: use only strongest rssi (how much?)
     # threashold or best 5?
     # Idea: Simulate data where real position is known, then check for best accurancy
     #TODO: highlight relevant beacons
 
+    #open
+    #TODO: git cleanup
+    #TODO: Write README Howto install, run, etc.
+    #TODO: Info: currently not more than one device
     #TODO: optimize colors (in visualize_device_in_time_update())
 
     #delayed
