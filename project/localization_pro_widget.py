@@ -9,8 +9,6 @@ import matplotlib.pyplot as plt
 from scipy import optimize, stats
 import minvc as vc
 
-import matplotlib
-#import matplotlib.animation as animation
 from matplotlib.widgets import Slider
 from matplotlib.patches import Ellipse
 
@@ -34,6 +32,7 @@ def load_measurements():
         print(measurements)
 
     print("#meas: {}".format(len(measurements)))
+    #lists for stats
     meas = []
     names_set=set()
     timestamps_set=set()
@@ -53,10 +52,6 @@ def load_measurements():
     print("devices: {}".format(names_set))
     print("timestamps: {}".format(timestamps_set))
     print("#timestamps: {}".format(len(timestamps_set)))
-
-    # select one measurement
-    #meas: vc.Measurement = measurements[0]
-    #if p:print(meas)
     return meas
 
 def load_calibration():
@@ -64,9 +59,10 @@ def load_calibration():
     if debug_bool:print(calib)
     return calib
 
-def add_if_not(liste, value):
-    if value not in liste:
-        liste.append(value)
+def add_if_not(list, value):
+    """add value into list, if not already in"""
+    if value not in list:
+        list.append(value)
 
 # scatter plot of RSSI vs. distance
 def visualize_rssi_dist(calib, c0, n):
@@ -94,13 +90,19 @@ def visualize_rssi_dist(calib, c0, n):
     plt.legend()
     plt.show()
 
-def calc_dists_with_calibs(meas, c0, n):
-    rssi_conv = vc.RSSIConverter(c0=c0, n=n, d0=1.0)
+def calc_dists_with_calibs(meas, c0, n, d0=1.0):
+    """calculate distances from device to beacons in given measured data and writes them into meas-list.
+
+    All measured data will be used. Currently there is no sort out.
+
+    Parameter d0 is 1.0 by default"""
+    rssi_conv = vc.RSSIConverter(c0=c0, n=n, d0=d0)
     beacon_ests = rssi_conv.get_dist(meas.get_beacon_rssis())
     meas.set_beacon_est(beacon_ests)
     return meas
 
 def calc_c0_n(calib):
+    """calculates values c0 and n according to calibration data by linear regression"""
     rssis = calib['rssi'].values
     dists = calib['dist'].values
 
@@ -118,32 +120,25 @@ def calc_c0_n(calib):
     c0=res.intercept
     n=res.slope
     print("Calibration result: c0: {}, n: {}".format(c0, n))
-
-    #print("RSSIs {}".format(rssis))
-
-    #for dist, rssi in zip(dists, rssis):
-    #    print("dist {}, rssi {} rssi_est {}".format(dist, rssi, res.intercept + res.slope * dist))
-    #    print("rssi {} dist {}, dist_est {}".format(rssi, dist, (rssi - res.intercept) / res.slope))
-    # rssi = inter + slopw * dist
-    # r = i+s*d
-
     return c0, n
 
 def get_mean(beacons, meas):
+    """calculates the mean of beacons locations whose signal is within the measured data"""
     beacons_locations=beacons.loc[meas.get_beacon_names()].values
-    #np.mean(beacons[1:4], 0)
     mean=beacons_locations.mean(axis=0)
     return mean
 
 def residual(device_location, beacon_locations, measured_dists):
-    """'device_location' is estimated tracking device location"""
-    #delta_i=d_i-d(r_i,p)
+    """'device_location' is estimated tracking device location according formula:
+
+    delta_i=d_i-d(r_i,p)"""
     diff_ri_p=beacon_locations-device_location
     dist_ri_p=np.linalg.norm(diff_ri_p,axis=1)
     cur_error=measured_dists-dist_ri_p
     return cur_error
 
 def calc_location(beacons, meas):
+    """calculates the estimated location (est) as well as standard deviation of the device and updates values in given meas"""
     initial_location=get_mean(beacons, meas)
     #print("mean: {}".format(initial_location))
 
@@ -155,9 +150,11 @@ def calc_location(beacons, meas):
     result=optimize.least_squares(residual, initial_location, args=(beacon_locations, beacon_dists))
     solution=result.x
     #print("solution: {}".format(solution))
+    meas.set_device_est_position(solution)
 
     #calc uncertainties
-    #Assumption: Jacobian is regular ;)
+    #TODO: Assumption here: Jacobian is regular ;)
+    # Implement singular-value decomposition
     J=result.jac
     H=J.T.dot(J)
     cov=np.linalg.inv(H)
@@ -165,21 +162,14 @@ def calc_location(beacons, meas):
     sigma=np.sqrt(variance)
     #print("sigma: {}".format(sigma))
     meas.set_uncertainties(sigma)
-
-    #TODO: root mean squared error
-    #rmse=
-    #mean absolute error
-    #mae=cost/len(meas.beacon_data)
-    #print(mae)
-
-    #meas.set_device_est_position([10,45]) # <- zum testen
-    meas.set_device_est_position(solution)
-    #meas.set_real_location(solution)
     return meas
 
-# visualize beacon locations
-def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
 
+def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
+    """visualizes beacon locations within given axes (ax).
+
+    This function should be called from visualize_device_2d(meas, beacons, time)
+    """
     #TODO: need to be sure, that there is only one measuremnt for timestamp
     meas=measurements[timestamp_index]
 
@@ -242,8 +232,6 @@ def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
             ax.add_patch(plt.Circle(beacon_location[0:2], radius=est, alpha=alpha, color=col_dist, fill=False))
             ax.add_patch(plt.Circle(beacon_location[0:2], radius=est, alpha=alpha/10, color=col_dist, fill=True))
             add_if_not(legend, disc)
-            #beacons_annotation = "{} est: {:.2f}".format(name, est)
-            #ax.annotate(name, beacon_location[0:2] + offset)
             ax.annotate("est: {:.2f}".format(est), beacon_location[0:2] + offset_dist)
 
             #emph measured beacons
@@ -267,6 +255,11 @@ def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
     ax.legend(legend, loc="lower right")
 
 def visualize_device_2d(meas, beacons, time):
+    """
+    Builds a mathplotlib widget with slider for timestamps.
+
+    Calls visualize_device_in_time_update()
+    """
     #prepare plot
     fig, ax = plt.subplots(figsize=[12, 12])
     #init vis
@@ -292,6 +285,7 @@ def visualize_device_2d(meas, beacons, time):
     plt.show()
 
 def save_to_csv(name, time, location):
+    """Saves calculated location data into csv file"""
     # print("{}, {}, {}".format(len(name), len(time), len(location)))
     #TODO save as x, y, z
     d = {'name': name, 'time': time, 'location': location}
@@ -346,8 +340,6 @@ def main():
     #TODO: comment functions
 
     #KD
-    #TODO: cleanup code
-    # and comment (with """xx""")
     #TODO: use only strongest rssi (how much?)
     # threashold or best 5?
     # Idea: Simulate data where real position is known, then check for best accurancy
