@@ -36,29 +36,39 @@ class Measurement:
         # date and time of measurement
         assert type(timestamp) is pd.Timestamp
         self.timestamp = timestamp
-        self.device_est_position = None
-        self.uncertainties = None
         # optional actual device location (for training)
         if actual_location is not None:
             assert type(actual_location) is np.ndarray
             assert actual_location.shape == (3,)
         self.actual_location = actual_location
+        #calculated position
+        self.device_est_position = None
+        #uncertainties vector (standard deviation)
+        self.uncertainties = None
         
     def __repr__(self):
         return "device: " + self.device_name + ", timestamp: " + str(self.timestamp) \
                + ", est_location: " + str(self.device_est_position) \
-               + ", uncertainties: "+str(self.uncertainties)+"\n" + str(self.beacon_data)
+               + ", uncertainties: "+str(self.uncertainties) \
+               +"\n" + str(self.beacon_data)
 
+    #getter and setter
     def get_device_est_position(self):
         return self.device_est_position
-
+    def set_device_est_position(self, device_est_position):
+        self.device_est_position = device_est_position
     def get_uncertainties(self):
         return self.uncertainties
     def set_uncertainties(self, uncertainties):
         self.uncertainties = uncertainties
 
-    def set_device_est_position(self, device_est_position):
-        self.device_est_position = device_est_position
+    #get calculated position as np.array
+    def get_beacon_est(self):
+        return self.beacon_data['est'].values
+    # set calculated position as np.array
+    def set_beacon_est(self, list_est):
+        self.beacon_data['est'] = list_est
+
     # get beacon names as np.array
     def get_beacon_names(self):
         return self.beacon_data['name'].values
@@ -71,25 +81,15 @@ class Measurement:
     # def get_beacon_dists(self):
     #     return self.beacon_data['dist'].values
 
-    def get_beacon_est(self):
-        return self.beacon_data['est'].values
+    # def get_real_location(self):
+    #     return self.actual_location
 
-    def set_beacon_est(self, list_est):
-        self.beacon_data['est'] = list_est
-
-    def get_real_location(self):
-        return self.actual_location
-
-    def set_real_location(self, real_location):
-        self.actual_location=real_location
-
-    def delete_col(self, id):
-        #self.beacon_data.drop(id, axis=1)
-        self.beacon_data.drop(columns=id)
+    # def set_real_location(self, real_location):
+    #    self.actual_location=real_location
 
     # get 2D beacon distances as np.array
-    def get_beacon_dists2d(self):
-        return self.beacon_data['dist2d'].values
+    # def get_beacon_dists2d(self):
+    #    return self.beacon_data['dist2d'].values
 
     
 # utility class to convert distance to RSSI and vice versa

@@ -337,7 +337,6 @@ def main():
     #CR
     #TODO save locations as x, y, z
     # device: d0, timestamp: 2021-05-11 11:40:00, x: 47.09392202, y: 48.1984661, z: 2.44212059
-    #TODO: comment functions
 
     #KD
     #TODO: use only strongest rssi (how much?)
@@ -350,6 +349,7 @@ def main():
     #TODO: Write README Howto install, run, etc.
     #TODO: Info: currently not more than one device
     #TODO: optimize colors (in visualize_device_in_time_update())
+
 
     #delayed
     #TODO: generate testdata with simluation (with real location) to test results
