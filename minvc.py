@@ -37,6 +37,7 @@ class Measurement:
         assert type(timestamp) is pd.Timestamp
         self.timestamp = timestamp
         self.device_est_position = None
+        self.uncertainties = None
         # optional actual device location (for training)
         if actual_location is not None:
             assert type(actual_location) is np.ndarray
@@ -45,10 +46,16 @@ class Measurement:
         
     def __repr__(self):
         return "device: " + self.device_name + ", timestamp: " + str(self.timestamp) \
-               + ", est_location: " + str(self.device_est_position) + "\n" + str(self.beacon_data)
+               + ", est_location: " + str(self.device_est_position) \
+               + ", uncertainties: "+str(self.uncertainties)+"\n" + str(self.beacon_data)
 
     def get_device_est_position(self):
         return self.device_est_position
+
+    def get_uncertainties(self):
+        return self.uncertainties
+    def set_uncertainties(self, uncertainties):
+        self.uncertainties = uncertainties
 
     def set_device_est_position(self, device_est_position):
         self.device_est_position = device_est_position

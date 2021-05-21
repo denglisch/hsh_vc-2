@@ -12,6 +12,7 @@ import minvc as vc
 import matplotlib
 #import matplotlib.animation as animation
 from matplotlib.widgets import Slider
+from matplotlib.patches import Ellipse
 
 
 debug_bool = False
@@ -209,6 +210,22 @@ def calc_location(beacons, meas):
     solution=result.x
     #print("solution: {}".format(solution))
 
+    #calc uncertainties
+    #Assumption: Jacobian is regular ;)
+    J=result.jac
+    H=J.T.dot(J)
+    cov=np.linalg.inv(H)
+    variance=np.diag(cov)
+    sigma=np.sqrt(variance)
+    #print("sigma: {}".format(sigma))
+    meas.set_uncertainties(sigma)
+
+    #TODO: root mean squared error
+    #rmse=
+    #mean absolute error
+    #mae=cost/len(meas.beacon_data)
+    #print(mae)
+
     #meas.set_device_est_position([10,45]) # <- zum testen
     meas.set_device_est_position(solution)
     #meas.set_real_location(solution)
@@ -227,6 +244,7 @@ def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
     col_beacon='blue'
     col_mean='black'
     col_dist='red'
+    col_trace='gray'
 
     b_dot = 0.25                    # radius for dots
     location_dot = 0.45
@@ -238,9 +256,14 @@ def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
     pos = meas.get_device_est_position()
     if pos is not None:
         disc = "Estimated location"
-        ax.add_patch(plt.Circle(pos[0:2], radius=location_dot, fc=col_est))
+        #ax.add_patch(plt.Circle(pos[0:2], radius=location_dot, fc=col_est))
         ax.annotate(disc, pos[0:2] + offset)
         add_if_not(legend, disc)
+        #multiply by 5 to see anything ;)
+        uncert=meas.get_uncertainties()*5
+        ellipse=Ellipse(pos[0:2], width=uncert[0], height=uncert[1], alpha=0.5, color=col_est, fill=True)
+        #print(ellipse)
+        ax.add_patch(ellipse)
 
     #mean
     beacons_location_mean=get_mean(beacons, meas)
@@ -283,11 +306,15 @@ def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
 
     #TODO: trace route for multiple devices
     if timestamp_index>0:
+        label = "Trajectory"
         for i in range(1,timestamp_index+1):
+            #two lines to repair legend ;)
+            if i>1 :label="_nolegend_"
+            else: legend.insert(0,label)
             from_loc=measurements[i-1].get_device_est_position()[0:2]
             to_loc=measurements[i].get_device_est_position()[0:2]
             #print("from: {} to: {}".format(from_loc,to_loc))
-            ax.plot([from_loc[0], to_loc[0]],[from_loc[1], to_loc[1]], 'bo-')
+            ax.plot([from_loc[0], to_loc[0]],[from_loc[1], to_loc[1]], 'o', ms=2.0, ls='-', lw=1.0, color=col_trace, label=label)
             ax.annotate("time: {}".format(measurements[i-1].timestamp), from_loc + offset_dist)
 
     ax.legend(legend, loc="lower right")
@@ -354,26 +381,34 @@ def main():
     df.to_csv('out/out.csv', index=False)
     #print(meas)
 
-
     #CR
-    #TODO done est or dist? --> est, remove rest
-    # cleanup load functions
-    #TODO done calc dist2d or remove ;) -->remove
-    #TODO done save meas into csv
-    # device: d0, timestamp: 2021-05-11 11:40:00, est_location: [47.09392202 48.1984661   2.44212059]
+    #TODO save locations as x, y, z
+    # device: d0, timestamp: 2021-05-11 11:40:00, x: 47.09392202, y: 48.1984661, z: 2.44212059
+    #TODO: comment functions
+
+    #TODO: git cleanup
+    #TODO: Write README Howto install, run, etc.
+
+    #TODO: Info: currently not more than one device
+    #TODO: Info: currently not ordered timestamps
 
     #KD
-    #TODO cleanup code
-    # amd comment
-    #TODO use only strongest rssi (how much?)
+    #TODO: cleanup code
+    # and comment (with """xx""")
+
+    #open
+    #TODO: uncertainties
+    # estimate as ellipse
+
+    #TODO: use only strongest rssi (how much?)
     # threashold or best 5?
-    #TODO done: make nice visualization (on timestamps or something...)
+    # Idea: Simulate data where real position is known, then check for best accurancy
     #TODO: highlight relevant beacons
-    #TODO: trace route
+
+    #TODO: optimize colors (in visualize_device_in_time_update())
 
     #delayed
-    #TODO generate testdata with simluation (with real location) to test results
-    #TODO check if calculated distances match the visualization
+    #TODO: generate testdata with simluation (with real location) to test results
 
 if __name__ == "__main__":
     main()
