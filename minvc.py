@@ -77,13 +77,13 @@ class Measurement:
     def get_beacon_rssis(self):
         return self.beacon_data['rssi'].values
 
-    # # get beacon distances as np.array
+    # # # get beacon distances as np.array
     # def get_beacon_dists(self):
     #     return self.beacon_data['dist'].values
-
-    # def get_real_location(self):
-    #     return self.actual_location
-
+    #
+    def get_real_location(self):
+        return self.actual_location
+    #
     # def set_real_location(self, real_location):
     #    self.actual_location=real_location
 

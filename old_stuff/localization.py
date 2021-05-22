@@ -11,10 +11,10 @@ import minvc as vc
 
 # read beacon locations
 # beacons: vc.Beacon = pd.read_csv("beacons.csv")
-beacons: vc.Beacon = pd.read_csv("project/beacons_proj.csv")
-beacons.set_index('name', inplace=True)
-# display(beacons)
-print(beacons)
+# beacons: vc.Beacon = pd.read_csv("project/beacons_proj.csv")
+# beacons.set_index('name', inplace=True)
+# # display(beacons)
+# print(beacons)
 
 # read measurements
 # filename = "project/measurement_proj.p"
@@ -24,7 +24,7 @@ print(beacons)
 # print(measurements)
 
 # filename = "measurement1noise3.p"
-filename = "project/measurement_proj.p"
+filename = "../measurement1test.p"
 with open(filename, 'rb') as f:
     measurements = pickle.load(f)
 print(type(measurements))
@@ -75,16 +75,16 @@ def visualize(meas, beacons, c0, n):
 
 
 
-res = stats.linregress(meas.get_beacon_dists(), meas.get_beacon_rssis())
-print("intercept: {}, slope: {}".format(res.intercept,res.slope))
-print("RSSIs {}".format(meas.get_beacon_rssis()))
+# res = stats.linregress(meas.get_beacon_dists(), meas.get_beacon_rssis())
+# print("intercept: {}, slope: {}".format(res.intercept,res.slope))
+# print("RSSIs {}".format(meas.get_beacon_rssis()))
 
 
 
 # scatter plot of RSSI vs. distance
 plt.scatter(meas.get_beacon_dists(), meas.get_beacon_rssis())
-plt.plot(meas.get_beacon_dists(), res.intercept + res.slope*meas.get_beacon_dists(), 'r', label='fitted line')
-
+# plt.plot(meas.get_beacon_dists(), res.intercept + res.slope*meas.get_beacon_dists(), 'r', label='fitted line')
+#
 plt.title("RSSI vs. distance")
 plt.xlabel("Distance")
 plt.ylabel("RSSI")
@@ -92,4 +92,4 @@ plt.legend()
 plt.show()
 
 
-visualize(meas, beacons, res.intercept, res.slope)
+# visualize(meas, beacons, res.intercept, res.slope)

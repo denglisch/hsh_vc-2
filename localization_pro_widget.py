@@ -11,8 +11,9 @@ import minvc as vc
 
 from matplotlib.widgets import Slider
 from matplotlib.patches import Ellipse
+import tensorflow as tf
 
-
+prediction = False
 debug_bool = False
 # read beacon locations
 def load_beacon_locations() -> vc.Beacon:
@@ -24,7 +25,10 @@ def load_beacon_locations() -> vc.Beacon:
 
 # read meas
 def load_measurements():
-    filename = "measurement_proj.p"
+    if prediction:
+        filename = "measurement1_test.p"
+    else:
+        filename = "measurement_proj.p"
     with open(filename, 'rb') as f:
         measurements = pickle.load(f)
     if debug_bool:
@@ -292,6 +296,24 @@ def save_to_csv(name, time, location):
     df = pd.DataFrame(data=d)
     df.to_csv('out/out.csv', index=False)
 
+def predict_location(meas):
+    """predict the estimated location (est) as well as standard deviation of the device and updates values in given meas"""
+    new_model = tf.keras.models.load_model('saved_model/my_model')
+    row = np.full(50, 0).tolist()
+    # print(row)
+    for name, rssi in zip(meas.get_beacon_names(), meas.get_beacon_rssis()):
+
+        index = int(name.replace("b", ""))
+        row[index] = ((-rssi)-0)/(100-0)
+
+    # print(row.shape)
+    solution = new_model.predict(row)
+
+    meas.set_device_est_position(solution)
+    meas.set_uncertainties(2)
+    return meas
+
+
 def main():
     # vis calib
     print("Load calibration data")
@@ -317,8 +339,11 @@ def main():
         #calc dists to beacons from rssi
         measurement = calc_dists_with_calibs(measurement, c0, n)
 
-        #calc position of this measurement (device and time)
-        measurement = calc_location(beacons, measurement)
+        if prediction:
+            measurement = predict_location(measurement)
+        else:
+            #  calc position of this measurement (device and time)
+            measurement = calc_location(beacons, measurement)
 
         name.append(measurement.device_name)
         time.append(measurement.timestamp)

@@ -12,7 +12,7 @@ def create_measurement(device_name, device_location, beacons, n_signals=None, no
     # convert beacon names and locations to NumPy arrays
     beacon_names = beacons['name'].values
     beacon_locations = beacons[['x', 'y', 'z']].values
-    print(beacon_names, "\n\n", beacon_locations)
+    # print(beacon_names, "\n\n", beacon_locations)
 
     # compute distances between device and beacons (2D for visualization only)
     n = beacon_names.size
@@ -21,8 +21,8 @@ def create_measurement(device_name, device_location, beacons, n_signals=None, no
 
     beacon_dists2d = np.linalg.norm(beacon_locations[:, 0:2] - device_location[0:2], axis=1) \
                      + np.random.normal(scale=noise, size=n)
-    print(beacon_dists)
-    print(beacon_dists2d)
+    # print(beacon_dists)
+    # print(beacon_dists2d)
 
     # compute RSSI values of 3D distances
     rssi_conv = vc.RSSIConverter()
@@ -46,20 +46,23 @@ def create_measurement(device_name, device_location, beacons, n_signals=None, no
     return measurement
 
 # load data
-beacons = pd.read_csv("beacons.csv")
+beacons = pd.read_csv("beacons_proj.csv")
 # create list of measurements
 device_name = "d1"
 n_signals = 8
-meas0 = create_measurement(device_name, np.array([23.0,26.0,0.0]), beacons, n_signals, noise = 0.3)
-meas1 = create_measurement(device_name, np.array([21.0,17.0,0.0]), beacons, n_signals, noise = 0.3)
-measurements = [meas0,meas1]
+anzahl_positionen=5
+anzahl_devices=2
+measurements = []
+for i in range(0,anzahl_positionen):
+    x,y = np.random.uniform(low=10, high=90, size=2)
+    meas = create_measurement(device_name, np.array([x,y,0.0]), beacons, n_signals, noise=0.5)
+    measurements.append(meas)
+    print("meas x:{} y:{}".format(x,y))
+    # print("meas \n{}".format(meas))
 
-
-print("meas0 \n{}".format(meas0))
-print("meas1 \n{}".format(meas1))
 
 
 # store measurements as pickle file
-filename = "measurement1noise3.p"
+filename = "measurement1_test.p"
 with open(filename, 'wb') as f:
     pickle.dump(measurements, f)
