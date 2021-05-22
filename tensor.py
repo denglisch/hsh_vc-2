@@ -83,6 +83,7 @@ test_y_labels = test_features.pop('y')
 
 model = tf.keras.Sequential([
     tf.keras.layers.InputLayer(input_shape=(n_columns-n_output,)),
+    tf.keras.layers.Dense(25),
     tf.keras.layers.Dense(8),
     tf.keras.layers.Dense(3),
     tf.keras.layers.Dense(n_output)])
@@ -90,12 +91,13 @@ model = tf.keras.Sequential([
 model.summary()
 
 model.compile(
-    optimizer=tf.optimizers.Adam(learning_rate=0.1),
+    optimizer=tf.optimizers.Adam(learning_rate=0.0001),
     loss='mean_absolute_error')
 
+print(type(train_features))
 history = model.fit(
     train_features, [train_x_labels, train_y_labels],
-    epochs=2,
+    epochs=250,
     # suppress logging
     verbose=1,
     # Calculate validation results on 20% of the training data
@@ -108,8 +110,9 @@ history = model.fit(
 loss = model.evaluate(test_features, [test_x_labels,test_y_labels], verbose=1)
 print("Untrained model, accuracy: {:5.2f}%".format(100 * loss))
 
-model.save('saved_model/my_model')
+model.save('saved_model/my_model.h5')
 
+model_new = tf.keras.models.load_model('saved_model/my_model.h5')
 
 def plot_loss(history):
   plt.plot(history.history['loss'], label='loss')
@@ -122,4 +125,4 @@ def plot_loss(history):
   plt.show()
 
 
-plot_loss(history)
+# plot_loss(history)

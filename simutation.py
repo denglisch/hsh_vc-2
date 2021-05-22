@@ -61,8 +61,12 @@ for i in range(0,anzahl_positionen):
     # print("meas \n{}".format(meas))
 
 
-
 # store measurements as pickle file
-filename = "measurement1_test.p"
+filename = "measurement1_train.p"
 with open(filename, 'wb') as f:
     pickle.dump(measurements, f)
+
+## TODO für Testdaten
+# - zusammenhang zwischen stationen und coordinaten muss gegeben sein,
+#   - wenn ein Datensatz an x:15 y:5 als stärkste station b2 hat muss das in der umgebung dieser position immer so sein
+#

@@ -13,7 +13,7 @@ from matplotlib.widgets import Slider
 from matplotlib.patches import Ellipse
 import tensorflow as tf
 
-prediction = False
+prediction = True
 debug_bool = False
 # read beacon locations
 def load_beacon_locations() -> vc.Beacon:
@@ -153,6 +153,7 @@ def calc_location(beacons, meas):
     #running least squares
     result=optimize.least_squares(residual, initial_location, args=(beacon_locations, beacon_dists))
     solution=result.x
+    print(solution)
     #print("solution: {}".format(solution))
     meas.set_device_est_position(solution)
 
@@ -181,6 +182,7 @@ def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
     ax.clear()
     ax.axis([0, 100, 0, 100])
 
+    col_pred = 'violet'
     col_est='red'
     col_beacon='blue'
     col_mean='black'
@@ -193,7 +195,26 @@ def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
     offset_dist = np.array([0.6,-1])    # offset for annotations
     legend: list = []
 
-    #estimated location
+
+    pos = meas.get_pred_location()[0]
+    list = pos.tolist()
+    list.append(0)
+    print(list)
+    pos_pred = list
+
+    # predicted location
+    if pos_pred is not None:
+        disc = "Predicted location"
+        #ax.add_patch(plt.Circle(pos[0:2], radius=location_dot, fc=col_est))
+        ax.annotate(disc, pos_pred[0:2] + offset)
+        add_if_not(legend, disc)
+        #multiply by 5 to see anything ;)
+        uncert=[1,1]*5
+        ellipse=Ellipse(pos_pred[0:2], width=uncert[0], height=uncert[1], alpha=0.5, color=col_pred, fill=True)
+        #print(ellipse)
+        ax.add_patch(ellipse)
+
+    # estimated location
     pos = meas.get_device_est_position()
     if pos is not None:
         disc = "Estimated location"
@@ -296,9 +317,9 @@ def save_to_csv(name, time, location):
     df = pd.DataFrame(data=d)
     df.to_csv('out/out.csv', index=False)
 
-def predict_location(meas):
+def predict_location(beacons, meas):
     """predict the estimated location (est) as well as standard deviation of the device and updates values in given meas"""
-    new_model = tf.keras.models.load_model('saved_model/my_model')
+    model = tf.keras.models.load_model('saved_model/my_model.h5')
     row = np.full(50, 0).tolist()
     # print(row)
     for name, rssi in zip(meas.get_beacon_names(), meas.get_beacon_rssis()):
@@ -306,10 +327,14 @@ def predict_location(meas):
         index = int(name.replace("b", ""))
         row[index] = ((-rssi)-0)/(100-0)
 
-    # print(row.shape)
-    solution = new_model.predict(row)
+    # print("anzahl {}, row: {}".format(len(row),row))
+    # colums = beacons.index.values.tolist()
+    # print(colums)
+    df = pd.DataFrame([row], columns=beacons.index.values.tolist())
+    print("df {}".format(df))
+    solution = model.predict(df)
 
-    meas.set_device_est_position(solution)
+    meas.set_pred_location(solution)
     meas.set_uncertainties(2)
     return meas
 
@@ -339,11 +364,10 @@ def main():
         #calc dists to beacons from rssi
         measurement = calc_dists_with_calibs(measurement, c0, n)
 
-        if prediction:
-            measurement = predict_location(measurement)
-        else:
-            #  calc position of this measurement (device and time)
-            measurement = calc_location(beacons, measurement)
+        #  predict position of this measurement (device and time)
+        measurement = predict_location(beacons, measurement)
+        #  calc position of this measurement (device and time)
+        measurement = calc_location(beacons, measurement)
 
         name.append(measurement.device_name)
         time.append(measurement.timestamp)

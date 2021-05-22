@@ -69,6 +69,12 @@ class Measurement:
     def set_beacon_est(self, list_est):
         self.beacon_data['est'] = list_est
 
+    def set_pred_location(self, pred_location):
+        self.pred_location = pred_location
+
+    def get_pred_location(self):
+        return self.pred_location
+
     # get beacon names as np.array
     def get_beacon_names(self):
         return self.beacon_data['name'].values
