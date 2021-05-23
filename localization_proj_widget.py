@@ -80,7 +80,7 @@ def visualize_rssi_dist(calib, c0, n):
     #plot rssis
     plt.scatter(dists, rssis, c='b', label='RSSIs')
     #plot line
-    plt.plot(dists, res.intercept + res.slope*dists, 'g', label='fitted line')
+    #plt.plot(dists, res.intercept + res.slope*dists, 'g', label='fitted line')
 
     #plot fitted curve
     min=np.amin(dists)
@@ -224,6 +224,7 @@ def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
         #multiply by 5 to see anything ;)
         uncert=meas.get_uncertainties()*5
         ellipse=Ellipse(pos[0:2], width=uncert[0], height=uncert[1], alpha=0.5, color=col_est, fill=True)
+        print("Uncertainties sigma: {}".format(meas.get_uncertainties()))
         #print(ellipse)
         ax.add_patch(ellipse)
 
@@ -315,7 +316,7 @@ def save_to_csv(name, time, location):
     #TODO save as x, y, z
     d = {'name': name, 'time': time, 'location': location}
     df = pd.DataFrame(data=d)
-    df.to_csv('out/out.csv', index=False)
+    df.to_csv('out/distances.csv', index=False)
 
 def predict_location(beacons, meas):
     """predict the estimated location (est) as well as standard deviation of the device and updates values in given meas"""
@@ -344,7 +345,7 @@ def main():
     print("Load calibration data")
     calib = load_calibration()
     c0, n = calc_c0_n(calib)
-    #visualize_rssi_dist(calib, c0, n)
+    visualize_rssi_dist(calib, c0, n)
 
     #load measured data
     print("Load beacons data")
