@@ -14,7 +14,7 @@ from matplotlib.widgets import Slider
 from matplotlib.patches import Ellipse
 import tensorflow as tf
 
-prediction = True
+prediction = False
 nan_values = 0
 debug_bool = False
 # read beacon locations
