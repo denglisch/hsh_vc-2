@@ -8,12 +8,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import optimize, stats
 import minvc as vc
+import time as tm
 
 from matplotlib.widgets import Slider
 from matplotlib.patches import Ellipse
 import tensorflow as tf
 
-prediction = False
+prediction = True
 nan_values = 0
 debug_bool = False
 # read beacon locations
@@ -30,6 +31,7 @@ def load_measurements():
         filename = "measurement1_test.p"
     else:
         filename = "measurement_proj.p"
+        # filename = "measurement1_test_old.p"
     with open(filename, 'rb') as f:
         measurements = pickle.load(f)
     if debug_bool:
@@ -201,7 +203,7 @@ def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
         pos1 = meas.get_pred_location()[0]
         list = pos1.tolist()
         list.append(0)
-        print(list)
+
         pos_pred = list
 
         if pos_pred is not None:
@@ -211,7 +213,7 @@ def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
             ellipse = Ellipse(real_pos[0:2], width=uncert[0], height=uncert[1], alpha=0.5, color=col_pred, fill=True)
             ax.add_patch(ellipse)
             ax.annotate(disc, real_pos[0:2] + offset)
-
+            print("pred: {} real: {}".format(list, real_pos))
             disc = "Predicted location"
             ax.annotate(disc, pos_pred[0:2] + offset)
             add_if_not(legend, disc)
@@ -316,15 +318,16 @@ def visualize_device_2d(meas, beacons, time):
 
 def save_to_csv(name, time, location, pred):
     """Saves calculated location data into csv file"""
-    # print("{}, {}, {}".format(len(name), len(time), len(location)))
-    #TODO save as x, y, z
+    temp_df = pd.DataFrame(data=location, columns=['x', 'y','z'])
     if prediction:
+        filenname = 'out/pred_test_{}.csv'.format(tm.strftime("%Y-%m-%d_%H-%M-%S"))
         d = {'name': name, 'time': time, 'location': location, 'predicted_loc': pred}
     else:
-        d = {'name': name, 'time': time, 'location': location}
+        filenname = 'out/distances.csv'
+        d = {'name': name, 'time': time, 'x': temp_df['x'], 'y': temp_df['y'], 'z': temp_df['z']}
 
     df = pd.DataFrame(data=d)
-    df.to_csv('out/distances.csv', index=False)
+    df.to_csv(filenname, index=False)
 
 def predict_location(beacons, meas):
     """predict a location with AI learned by tensor.py"""

@@ -25,7 +25,7 @@ def create_measurement(device_name, device_location, beacons, n_signals=None, no
     # print(beacon_dists2d)
 
     # compute RSSI values of 3D distances
-    rssi_conv = vc.RSSIConverter()
+    rssi_conv = vc.RSSIConverter(c0=-37.45877267729592, n= 2.689458542605622)
     beacon_rssis = rssi_conv.get_rssi(beacon_dists)
 
     # create data frame, only keep n_signals strongest signals (if set)
@@ -46,18 +46,18 @@ def create_measurement(device_name, device_location, beacons, n_signals=None, no
     return measurement
 
 # load data
-beacons = pd.read_csv("beacons_proj.csv")
+beacons = pd.read_csv("beacons.csv")
 # create list of measurements
 device_name = "d1"
 n_signals = 8
-anzahl_positionen=20
-anzahl_devices=2
+anzahl_positionen=15
+
 measurements = []
 for i in range(0,anzahl_positionen):
-    x, y = np.random.uniform(low=10, high=90, size=2)
-    # x = round(x, 2)
-    # y = round(y, 2)
-    # print(x,y)
+    x, y = np.random.uniform(low=5, high=95, size=2)
+    x = round(x, 2)
+    y = round(y, 2)
+    print(x,y)
     meas = create_measurement(device_name, np.array([x,y,0.0]), beacons, n_signals, keep_dists=False, noise=0.5)
     measurements.append(meas)
     # print("meas x:{} y:{}".format(x,y))
