@@ -342,11 +342,7 @@ def predict_location(beacons, meas):
         # norm
         row[index] = ((-rssi)-0)/(100-0)
 
-    # print("anzahl {}, row: {}".format(len(row),row))
-    # colums = beacons.index.values.tolist()
-    # print(colums)
     df = pd.DataFrame([row], columns=beacons.index.values.tolist())
-    # print("df {}".format(df))
     solution = model.predict(df)
 
     meas.set_pred_location(solution)

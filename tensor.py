@@ -41,7 +41,7 @@ nan_values=0
 df:pd.DataFrame = None
 
 data_list=[]
-
+# Prepare data to dataframe
 for meas in measurements:
     # print(meas)
     row = np.full(n_columns-n_output, nan_values).tolist()
@@ -59,19 +59,9 @@ for meas in measurements:
     data_list.append(row)
 
 df = pd.DataFrame(data_list, columns=columns)
-# print("df: {}".format(df))
-    # temp_list = meas.get_beacon_rssis().tolist()
-    # temp_list.append(row)
 
-# train_labels = train_features.pop('MPG')
-# test_labels = test_features.pop('MPG')
 train_dataset = df.sample(frac=0.8, random_state=0)
 test_dataset = df.drop(train_dataset.index)
-
-print(len(train_dataset))
-print(len(test_dataset))
-
-# sns.pairplot(train_dataset[columns], diag_kind='kde')
 
 train_features = train_dataset.copy()
 test_features = test_dataset.copy()
@@ -84,11 +74,11 @@ test_y_labels = test_features.pop('y')
 
 model = tf.keras.Sequential([
     tf.keras.layers.InputLayer(input_shape=(n_columns-n_output,)),
-    # tf.keras.layers.Dense(50),
-    tf.keras.layers.Dense(8),
-    tf.keras.layers.Dense(4),
-    tf.keras.layers.Dense(4),
-    tf.keras.layers.Dense(4),
+    tf.keras.layers.Dense(50),
+    # tf.keras.layers.Dense(8),
+    tf.keras.layers.Dense(5),
+    # tf.keras.layers.Dense(4),
+    # tf.keras.layers.Dense(4),
     tf.keras.layers.Dense(2),
     tf.keras.layers.Dense(n_output)])
 
