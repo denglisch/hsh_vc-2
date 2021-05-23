@@ -127,14 +127,13 @@ So we build the following one:
 - 2 output values (x- and y-coordinates)
 
 
-## Tain
-Generell train settings:
-- optimizer: Adam
-  - learning_rate=0.0001
-- loss: mean_squared_error
-- train data: 20000
-- batch size = 20
-- epochs = 100
+## Settings for Training 
+- Optimizer: Adam
+	- `learning_rate = 0.0001`
+- Loss: Mean Squared Error
+- Train data size: 20.000
+- Batch size: 20
+- Epochs: 100
 
 ## Synthetic Data
 To generate training-data, we used customized `simulation.py` to give us 60.000 training measurements (à 8 RSSI values).
