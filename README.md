@@ -4,7 +4,7 @@
 Calculate and 2D visualize current locations in space of a device measured RSSI-data.
 
 Localization is done by two approaches:
-- Multilateration using the _Log-Distance Path Loss Model__ and _Levenberg-Marquardt Algorithm__.
+- Multilateration using the _Log-Distance Path Loss Model__ and _Levenberg-Marquardt Algorithm__ (main part).
 - Experimental approach using AI to predict location based on synthetic data.
 
 
@@ -39,7 +39,7 @@ Or import into [PyCharm](https://www.jetbrains.com/de-de/pycharm/) as stated bel
 	(This file was given by the lecturer.)
 - `out/` directory is where the resulting `distances.csv` is stored, which contains device locations at time.
 - `localization_pro_widget.py` is "where the magic happens".
-	Its `main()` is running the calculation and visualization explained in the following paragraph.
+	Its `main()` is running the calculation and visualization explained in the [following paragraph](#what-does-it-do).
 
 
 # What does it do?
@@ -97,13 +97,6 @@ Issues:
 	To make it more robust, you could filter measured beacon data for each measurement for each timestamp and use only a subset of beacons RSSIs for calculation.
 	Eg. skip outliers, use only best 5, use a RSSI- or distance-threshold, etc.
 	
-
-# TODO
-- ...Update vis-image
-- ...AI stuff
-	- test/train data in "What these files are?"
-	- about bool predict
-
 <!--
 # PyCharm Shortcuts
 Vorher per Addon auf xcode geändert
