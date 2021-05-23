@@ -50,19 +50,24 @@ beacons = pd.read_csv("beacons_proj.csv")
 # create list of measurements
 device_name = "d1"
 n_signals = 8
-anzahl_positionen=5
+anzahl_positionen=20
 anzahl_devices=2
 measurements = []
 for i in range(0,anzahl_positionen):
     x,y = np.random.uniform(low=10, high=90, size=2)
-    meas = create_measurement(device_name, np.array([x,y,0.0]), beacons, n_signals, noise=0.5)
+    # x = round(x, 2)
+    # y = round(y, 2)
+    # print(x,y)
+    meas = create_measurement(device_name, np.array([x,y,0.0]), beacons, n_signals,keep_dists=False, noise=0.5)
     measurements.append(meas)
-    print("meas x:{} y:{}".format(x,y))
+    # print("meas x:{} y:{}".format(x,y))
     # print("meas \n{}".format(meas))
+    if i % 2000 == 0:
+        print("i: {}, {} %".format(i, i/anzahl_positionen*100))
 
 
 # store measurements as pickle file
-filename = "measurement1_train.p"
+filename = "measurement1_test.p"
 with open(filename, 'wb') as f:
     pickle.dump(measurements, f)
 

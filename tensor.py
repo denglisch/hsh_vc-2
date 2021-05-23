@@ -36,6 +36,7 @@ columns.append("y")
 n_columns = len(columns)
 n_output=2
 print(columns)
+nan_values=0
 
 df:pd.DataFrame = None
 
@@ -43,7 +44,7 @@ data_list=[]
 
 for meas in measurements:
     # print(meas)
-    row = np.full(n_columns-n_output, 0).tolist()
+    row = np.full(n_columns-n_output, nan_values).tolist()
     # print(row)
     for name, rssi in zip(meas.get_beacon_names(), meas.get_beacon_rssis()):
 
@@ -58,7 +59,7 @@ for meas in measurements:
     data_list.append(row)
 
 df = pd.DataFrame(data_list, columns=columns)
-print("df: {}".format(df))
+# print("df: {}".format(df))
     # temp_list = meas.get_beacon_rssis().tolist()
     # temp_list.append(row)
 
@@ -83,25 +84,34 @@ test_y_labels = test_features.pop('y')
 
 model = tf.keras.Sequential([
     tf.keras.layers.InputLayer(input_shape=(n_columns-n_output,)),
-    tf.keras.layers.Dense(25),
+    tf.keras.layers.Dense(50),
     tf.keras.layers.Dense(8),
-    tf.keras.layers.Dense(3),
+    tf.keras.layers.Dense(4),
+    tf.keras.layers.Dense(2),
     tf.keras.layers.Dense(n_output)])
 
 model.summary()
 
 model.compile(
+    # optimizer=tf.keras.optimizers.SGD(
+    # learning_rate=0.01, momentum=0.01, nesterov=False, name='SGD'),
     optimizer=tf.optimizers.Adam(learning_rate=0.0001),
-    loss='mean_absolute_error')
+    # metrics=[ tf.keras.metrics.Accuracy()],
+    loss='mean_squared_error')
+
+earlystop_callback = tf.keras.callbacks.EarlyStopping(
+     monitor='val_loss', min_delta=0.001, patience=3, mode='min', restore_best_weights=True)
 
 print(type(train_features))
 history = model.fit(
-    train_features, [train_x_labels, train_y_labels],
-    epochs=250,
+    train_features, [train_x_labels, train_y_labels], workers=8, use_multiprocessing=True,
+    epochs=100,
     # suppress logging
     verbose=1,
     # Calculate validation results on 20% of the training data
-    validation_split = 0.2)
+    validation_split = 0.2
+    ,callbacks=[earlystop_callback]
+)
 
 # hist = pd.DataFrame(history.history)
 # hist['epoch'] = history.epoch

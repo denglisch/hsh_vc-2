@@ -14,6 +14,7 @@ from matplotlib.patches import Ellipse
 import tensorflow as tf
 
 prediction = True
+nan_values=0
 debug_bool = False
 # read beacon locations
 def load_beacon_locations() -> vc.Beacon:
@@ -309,18 +310,18 @@ def visualize_device_2d(meas, beacons, time):
     #finally show plot
     plt.show()
 
-def save_to_csv(name, time, location):
+def save_to_csv(name, time, location, pred):
     """Saves calculated location data into csv file"""
     # print("{}, {}, {}".format(len(name), len(time), len(location)))
     #TODO save as x, y, z
-    d = {'name': name, 'time': time, 'location': location}
+    d = {'name': name, 'time': time, 'location': location, 'predicted_loc': pred}
     df = pd.DataFrame(data=d)
     df.to_csv('out/out.csv', index=False)
 
 def predict_location(beacons, meas):
     """predict the estimated location (est) as well as standard deviation of the device and updates values in given meas"""
     model = tf.keras.models.load_model('saved_model/my_model.h5')
-    row = np.full(50, 0).tolist()
+    row = np.full(50, nan_values).tolist()
     # print(row)
     for name, rssi in zip(meas.get_beacon_names(), meas.get_beacon_rssis()):
 
@@ -360,6 +361,7 @@ def main():
     name = []
     time = []
     location = []
+    predicted_location = []
     for measurement in meas:
         #calc dists to beacons from rssi
         measurement = calc_dists_with_calibs(measurement, c0, n)
@@ -372,6 +374,7 @@ def main():
         name.append(measurement.device_name)
         time.append(measurement.timestamp)
         location.append(measurement.device_est_position)
+        predicted_location.append(measurement.get_pred_location())
 
     print(time)
     print("Visualize 2D")
@@ -380,7 +383,7 @@ def main():
 
     #save calculated data
     print("Save distances data")
-    save_to_csv(name, time, location)
+    save_to_csv(name, time, location, predicted_location)
 
 
     #CR
