@@ -81,7 +81,7 @@ def visualize_rssi_dist(calib, c0, n):
     #plot rssis
     plt.scatter(dists, rssis, c='b', label='RSSIs')
     #plot line
-    plt.plot(dists, res.intercept + res.slope*dists, 'g', label='fitted line')
+    #plt.plot(dists, res.intercept + res.slope*dists, 'g', label='fitted line')
 
     #plot fitted curve
     min=np.amin(dists)
@@ -225,6 +225,7 @@ def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
         #multiply by 5 to see anything ;)
         uncert=meas.get_uncertainties()*5
         ellipse=Ellipse(pos[0:2], width=uncert[0], height=uncert[1], alpha=0.5, color=col_est, fill=True)
+        print("Uncertainties sigma: {}".format(meas.get_uncertainties()))
         #print(ellipse)
         ax.add_patch(ellipse)
 
@@ -316,7 +317,7 @@ def save_to_csv(name, time, location, pred):
     #TODO save as x, y, z
     d = {'name': name, 'time': time, 'location': location, 'predicted_loc': pred}
     df = pd.DataFrame(data=d)
-    df.to_csv('out/out.csv', index=False)
+    df.to_csv('out/distances.csv', index=False)
 
 def predict_location(beacons, meas):
     """predict the estimated location (est) as well as standard deviation of the device and updates values in given meas"""
@@ -345,7 +346,7 @@ def main():
     print("Load calibration data")
     calib = load_calibration()
     c0, n = calc_c0_n(calib)
-    #visualize_rssi_dist(calib, c0, n)
+    visualize_rssi_dist(calib, c0, n)
 
     #load measured data
     print("Load beacons data")
@@ -390,21 +391,11 @@ def main():
     #TODO save locations as x, y, z
     # device: d0, timestamp: 2021-05-11 11:40:00, x: 47.09392202, y: 48.1984661, z: 2.44212059
 
-    #KD
+    #Open
     #TODO: use only strongest rssi (how much?)
     # threashold or best 5?
     # Idea: Simulate data where real position is known, then check for best accurancy
     #TODO: highlight relevant beacons
-
-    #open
-    #TODO: git cleanup
-    #TODO: Write README Howto install, run, etc.
-    #TODO: Info: currently not more than one device
-    #TODO: optimize colors (in visualize_device_in_time_update())
-
-
-    #delayed
-    #TODO: generate testdata with simluation (with real location) to test results
 
 if __name__ == "__main__":
     main()
