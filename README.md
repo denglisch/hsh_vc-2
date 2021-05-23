@@ -136,5 +136,6 @@ This is because our function to create test data (`simulation.py`) creates diffe
 
 Ideas to make this better:
 - Learn with **huge** real data and/or
-- Optimize creation of synthetic data (`simulation.py`).
+- Optimize creation of synthetic data (`simulation.py`),
+- A few days more time to think about ;)
 
