@@ -54,11 +54,11 @@ anzahl_positionen=20
 anzahl_devices=2
 measurements = []
 for i in range(0,anzahl_positionen):
-    x,y = np.random.uniform(low=10, high=90, size=2)
+    x, y = np.random.uniform(low=10, high=90, size=2)
     # x = round(x, 2)
     # y = round(y, 2)
     # print(x,y)
-    meas = create_measurement(device_name, np.array([x,y,0.0]), beacons, n_signals,keep_dists=False, noise=0.5)
+    meas = create_measurement(device_name, np.array([x,y,0.0]), beacons, n_signals, keep_dists=False, noise=0.5)
     measurements.append(meas)
     # print("meas x:{} y:{}".format(x,y))
     # print("meas \n{}".format(meas))

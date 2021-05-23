@@ -13,8 +13,8 @@ from matplotlib.widgets import Slider
 from matplotlib.patches import Ellipse
 import tensorflow as tf
 
-prediction = True
-nan_values=0
+prediction = False
+nan_values = 0
 debug_bool = False
 # read beacon locations
 def load_beacon_locations() -> vc.Beacon:
@@ -154,7 +154,7 @@ def calc_location(beacons, meas):
     #running least squares
     result=optimize.least_squares(residual, initial_location, args=(beacon_locations, beacon_dists))
     solution=result.x
-    print(solution)
+
     #print("solution: {}".format(solution))
     meas.set_device_est_position(solution)
 
@@ -196,24 +196,27 @@ def visualize_device_in_time_update(measurements, beacons, timestamp_index, ax):
     offset_dist = np.array([0.6,-1])    # offset for annotations
     legend: list = []
 
-
-    pos = meas.get_pred_location()[0]
-    list = pos.tolist()
-    list.append(0)
-    print(list)
-    pos_pred = list
-
     # predicted location
-    if pos_pred is not None:
-        disc = "Predicted location"
-        #ax.add_patch(plt.Circle(pos[0:2], radius=location_dot, fc=col_est))
-        ax.annotate(disc, pos_pred[0:2] + offset)
-        add_if_not(legend, disc)
-        #multiply by 5 to see anything ;)
-        uncert=[1,1]*5
-        ellipse=Ellipse(pos_pred[0:2], width=uncert[0], height=uncert[1], alpha=0.5, color=col_pred, fill=True)
-        #print(ellipse)
-        ax.add_patch(ellipse)
+    if prediction:
+        pos1 = meas.get_pred_location()[0]
+        list = pos1.tolist()
+        list.append(0)
+        print(list)
+        pos_pred = list
+
+        if pos_pred is not None:
+            uncert = [1, 1] * 5
+            disc = "Real location"
+            real_pos = meas.get_real_location()
+            ellipse = Ellipse(real_pos[0:2], width=uncert[0], height=uncert[1], alpha=0.5, color=col_pred, fill=True)
+            ax.add_patch(ellipse)
+            ax.annotate(disc, real_pos[0:2] + offset)
+
+            disc = "Predicted location"
+            ax.annotate(disc, pos_pred[0:2] + offset)
+            add_if_not(legend, disc)
+            ellipse = Ellipse(pos_pred[0:2], width=uncert[0], height=uncert[1], alpha=0.5, color=col_pred, fill=True)
+            ax.add_patch(ellipse)
 
     # estimated location
     pos = meas.get_device_est_position()
@@ -320,20 +323,23 @@ def save_to_csv(name, time, location, pred):
     df.to_csv('out/distances.csv', index=False)
 
 def predict_location(beacons, meas):
-    """predict the estimated location (est) as well as standard deviation of the device and updates values in given meas"""
+    """predict a location with AI learned by tensor.py"""
+    # load Model
     model = tf.keras.models.load_model('saved_model/my_model.h5')
+    # fill input list with nan_value=0
     row = np.full(50, nan_values).tolist()
-    # print(row)
-    for name, rssi in zip(meas.get_beacon_names(), meas.get_beacon_rssis()):
 
+    # add generatet data
+    for name, rssi in zip(meas.get_beacon_names(), meas.get_beacon_rssis()):
         index = int(name.replace("b", ""))
+        # norm
         row[index] = ((-rssi)-0)/(100-0)
 
     # print("anzahl {}, row: {}".format(len(row),row))
     # colums = beacons.index.values.tolist()
     # print(colums)
     df = pd.DataFrame([row], columns=beacons.index.values.tolist())
-    print("df {}".format(df))
+    # print("df {}".format(df))
     solution = model.predict(df)
 
     meas.set_pred_location(solution)
@@ -367,15 +373,17 @@ def main():
         #calc dists to beacons from rssi
         measurement = calc_dists_with_calibs(measurement, c0, n)
 
-        #  predict position of this measurement (device and time)
-        measurement = predict_location(beacons, measurement)
+        if prediction:
+            #  predict position of this measurement (device and time)
+            measurement = predict_location(beacons, measurement)
+            predicted_location.append(measurement.get_pred_location())
         #  calc position of this measurement (device and time)
         measurement = calc_location(beacons, measurement)
 
         name.append(measurement.device_name)
         time.append(measurement.timestamp)
         location.append(measurement.device_est_position)
-        predicted_location.append(measurement.get_pred_location())
+
 
     print(time)
     print("Visualize 2D")

@@ -124,15 +124,15 @@ model.save('saved_model/my_model.h5')
 
 model_new = tf.keras.models.load_model('saved_model/my_model.h5')
 
-def plot_loss(history):
-  plt.plot(history.history['loss'], label='loss')
-  plt.plot(history.history['val_loss'], label='val_loss')
-  plt.ylim([0, 40])
-  plt.xlabel('Epoch')
-  plt.ylabel('Error [MPG]')
-  plt.legend()
-  plt.grid(True)
-  plt.show()
+# def plot_loss(history):
+#   plt.plot(history.history['loss'], label='loss')
+#   plt.plot(history.history['val_loss'], label='val_loss')
+#   plt.ylim([0, 40])
+#   plt.xlabel('Epoch')
+#   plt.ylabel('Error [MPG]')
+#   plt.legend()
+#   plt.grid(True)
+#   plt.show()
 
 
 # plot_loss(history)
