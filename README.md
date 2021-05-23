@@ -41,6 +41,14 @@ Or import into [PyCharm](https://www.jetbrains.com/de-de/pycharm/) as stated bel
 - `localization_pro_widget.py` is "where the magic happens".
 	Its `main()` is running the calculation and visualization explained in the [following paragraph](#what-does-it-do).
 
+For AI approach:
+- `simulation.py` creates test-data.  
+	(This file was given by the lecturer and was customized to generate arbitrary amount of test data.)
+- `measurement1_test.p` and `measurement1_train.p` contain test- resp. train-data.
+- `tensor.py` trains the net.
+- `saved_model` contains the trained net.  
+	More about the AI approach [below](#ai-approach).
+
 
 # What does it do?
 
@@ -99,5 +107,34 @@ Issues:
 
 # AI approach
 
+By default AI prediction is deactivated. 
+You'll find boolean in `localization_pro_widget.py`, line 16.
 
+Toggle this line to `prediction = True` and the program will do following additions:
+- Loads AI test data `measurement1_test.p`,
+- Loads net `saved_model/my_model.h5`,
+- Fills own field in Measurement class (`pred_location`) for AI predicted location,
+- Renders AI predicted location next to multilateration approach.
+
+
+## The net
+We tried several models, but got no significant different results...
+
+So we build the following one: 
+- Input layer with 50 inputs (beacons)
+- 5 dense layers
+- 2 output values (x- and y-coordinates)
+
+## Synthetic Data
+To generate training-data, we used customized `simulation.py` to give us 60.000 training measurements (à 8 RSSI values).
+The test-data is generated the same way, but disjunct from training-data.
+
+To match the "device-dependent" characteristics, we generated data with `c0` and `n` from calibration process.
+
+Note: The test data for AI (`measurement1_test.p`) are different to `measurement_proj.p` given by the lecturer.
+This is because our function to create test data (`simulation.py`) creates different values compared to given "real" data.
+
+Ideas to make this better:
+- Learn with **huge** real data and/or
+- Optimize creation of synthetic data (`simulation.py`).
 
