@@ -318,7 +318,11 @@ def save_to_csv(name, time, location, pred):
     """Saves calculated location data into csv file"""
     # print("{}, {}, {}".format(len(name), len(time), len(location)))
     #TODO save as x, y, z
-    d = {'name': name, 'time': time, 'location': location, 'predicted_loc': pred}
+    if prediction:
+        d = {'name': name, 'time': time, 'location': location, 'predicted_loc': pred}
+    else:
+        d = {'name': name, 'time': time, 'location': location}
+
     df = pd.DataFrame(data=d)
     df.to_csv('out/distances.csv', index=False)
 
