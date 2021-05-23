@@ -1,5 +1,6 @@
 # HsH MIN-VC Project 2: Localization and Multilateration
-(Find [rendered README.md on GitHub](https://github.com/denglisch/hsh_vc-2).)
+This project was developed within the context of the course _Visual Computing_ at Hannover University of Applied Sciences and Arts where the second part moderated by [Prof. Dr. Volker Ahlers](https://www.hs-hannover.de/service/personenfinder/person/1000003387/) was about localization and multilateration.
+
 
 Calculate and 2D visualize current locations in space of a device measured RSSI-data.
 
@@ -149,3 +150,4 @@ Ideas to make this better:
 - Optimize creation of synthetic data (`simulation.py`),
 - A few days more time to think about ;)
 
+Last note: This is an approach and unfortunately not a good solution yet.
