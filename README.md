@@ -1,3 +1,20 @@
+#
+
+
+
+# Run Project
+Either run project with `python`:
+```
+python3 localization_pro_widget.py 
+```
+Make sure required `minvc.py`, `beacons_proj.csv`, `calibration_proj.csv` and `measurement_proj.p` are in the same folder.
+
+Or import into [PyCharm](https://www.jetbrains.com/de-de/pycharm/).
+
+
+
+...STILL some `TODO`s in there... But this way you’ll find where to put hands on ;)
+
 # How to start with PyCharm
 - download with git
 - open folder with PyChram
