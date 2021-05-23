@@ -129,7 +129,7 @@ So we build the following one:
 
 ## Settings for Training 
 - Optimizer: Adam
-	- `learning_rate = 0.0001`
+	- Learning rate: 0.0001
 - Loss: Mean Squared Error
 - Train data size: 20.000
 - Batch size: 20
