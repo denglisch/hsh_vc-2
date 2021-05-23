@@ -4,7 +4,7 @@
 Calculate and 2D visualize current locations in space of a device measured RSSI-data.
 
 Localization is done by two approaches:
-- Multilateration using the _Log-Distance Path Loss Model__ and _Levenberg-Marquardt Algorithm__ (main part).
+- Multilateration using the _Log-Distance Path Loss Model_ and _Levenberg-Marquardt Algorithm_ (main part).
 - Experimental approach using AI to predict location based on synthetic data.
 
 
@@ -96,25 +96,8 @@ Issues:
 - There is no sort out of bad or unrealistic measured data.
 	To make it more robust, you could filter measured beacon data for each measurement for each timestamp and use only a subset of beacons RSSIs for calculation.
 	Eg. skip outliers, use only best 5, use a RSSI- or distance-threshold, etc.
-	
-<!--
-# PyCharm Shortcuts
-Vorher per Addon auf xcode geändert
-- Preferences->Plugins->Search xcode->install
 
-Run | shortcut 
- --------| -------- 
-Run Debug | cmd+r
-Stop debug | cmd+. 2x
---------| --------
-Code | shortcut 
- --------| --------
-Comment line out | cmd+shift+7(muss geändert werden) 
-Quick Doc der Funktion | fn+F1
-Show all input parameter | cmd+shift+p
---------| --------
-navigate | shortcut 
- --------| --------
-Jump in definition | cmd+mouse-click
-Jump back | cmd+ctrl+<-
--->
+# AI approach
+
+
+
